@@ -1,79 +1,86 @@
-import {
+import React, {
   createContext,
   useContext,
-  type ReactNode,
   useState,
   useEffect,
+  type ReactNode,
 } from "react";
-import { useNavigate } from "react-router-dom";
-import { api } from "../api/axios";
-import { ENDPOINTS } from "../api/endpoints";
+import axiosClient from "../api/axiosClient";
 
-type User = {
-  id: number;
-  username: string;
+export interface User {
+  id: string;
   email: string;
+  username: string;
+  password: string;
   role: "admin" | "staff";
-  name: string;
-  hotelId: number;
-};
+}
 
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
-};
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    // Try to load user from localStorage on initial render
+    const storedUser = localStorage.getItem("currentUser");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setIsLoading(false);
   }, []);
-
-  const login = async (username: string, password: string) => {
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<boolean> => {
+    setIsLoading(true);
     try {
-      const response = await api.get(ENDPOINTS.LOGIN);
-      const users = response.data;
+      const response = await axiosClient.get<User[]>("/users"); // response is an array of users object
 
-      const foundUser = users.find(
-        (u: any) => u.username === username && u.password === password
-      );
-
-      if (!foundUser) {
-        throw new Error("Invalid credentials");
+      console.log(`- - - Debugging Returned Response From AxiosClient - - -`);
+      console.log(response); //  - - - This returned an array of users objects
+      // Add this check!
+      if (!Array.isArray(response)) {
+        console.log(`- - - Debugging - - -`);
+        console.error("API response.data is not an array:", response);
+        setIsLoading(false);
+        return false;
       }
 
-      setUser(foundUser);
-      localStorage.setItem("user", JSON.stringify(foundUser));
-      localStorage.setItem("token", "mock-token");
+      const foundUser = response.find(
+        (u) => u.username === username && u.password === password
+      );
 
-      // Redirect based on role
-      if (foundUser.role === "admin") {
-        navigate("/admin/dashboard");
+      if (foundUser) {
+        setUser(foundUser);
+        localStorage.setItem("currentUser", JSON.stringify(foundUser));
+        setIsLoading(false);
+        return true;
       } else {
-        navigate("/staff/dashboard");
+        setIsLoading(false);
+        return false; // Invalid username or password
       }
     } catch (error) {
       console.error("Login failed:", error);
-      throw error;
+      setIsLoading(false);
+      return false;
     }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/login");
+    localStorage.removeItem("currentUser");
   };
 
   return (
@@ -81,12 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};

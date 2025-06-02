@@ -1,0 +1,20 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.contentWrapper {
+  display: flex;
+  flex: 1;
+}
+
+.mainContent {
+  flex-grow: 1;
+  transition: margin-left 0.3s ease-in-out;
+  background: #f8f8f8;
+}
+
+.mainContentCollapsed {
+  margin-left: 0px;
+}

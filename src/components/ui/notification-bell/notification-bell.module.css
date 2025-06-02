@@ -1,0 +1,36 @@
+.bellContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f3f3;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.bellContainer:hover {
+  background-color: #f8f9fa;
+}
+
+.bellIcon {
+  color: #6c757d;
+  transition: color 0.2s ease;
+}
+
+.bellContainer:hover .bellIcon {
+  color: #3c75f9;
+}
+
+.alertDot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background-color: #dc3545;
+  border-radius: 50%;
+  border: 2px solid white;
+}

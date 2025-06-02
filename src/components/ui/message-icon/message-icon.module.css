@@ -1,0 +1,43 @@
+.messageContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f3f3;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.messageContainer:hover {
+  background-color: #f8f9fa;
+}
+
+.messageIcon {
+  color: #6c757d;
+  transition: color 0.2s ease;
+}
+
+.messageContainer:hover .messageIcon {
+  color: #3c75f9;
+}
+
+.messageCount {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 4px;
+  border: 2px solid white;
+}

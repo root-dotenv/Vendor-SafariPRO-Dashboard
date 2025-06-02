@@ -1,0 +1,55 @@
+.menuItem {
+  margin-bottom: 5px;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  padding: 10px 10px;
+  color: #525b75;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* #3874ff
+  hover-gray - #EFF2F6 */
+
+.link:hover {
+  background-color: #eff2f6;
+}
+
+.link.active {
+  color: white;
+  background-color: #467dff;
+  /* background-color: #e8f48e; */
+  /* color: #000000; */
+  color: #fff;
+}
+
+.icon {
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+}
+
+.text {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  margin-left: auto; /* Push chevron to the right */
+  display: flex;
+  align-items: center;
+}
+
+.subMenu {
+  list-style: none;
+  padding: 0;
+  margin: 5px 0 5px 30px; /* Indent sub-menu */
+}

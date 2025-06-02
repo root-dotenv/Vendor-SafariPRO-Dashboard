@@ -1,47 +1,116 @@
-import { Suspense } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import { AppRoutes } from "./routes";
-import { Sidebar } from "./components/layout/Sidebar";
-import { TopNav } from "./components/layout/TopNav";
-import { useAuth } from "./contexts/AuthContext";
-import "./index.css";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import Layout from "./components/layout/layout";
+import Login from "./pages/authentication/login/login";
+import { AuthProvider, useAuth } from "./contexts/authcontext";
+import Dashboard from "./pages/dashboard/dashboard";
+import { allAppRoutes, type RouteConfig } from "./routes";
 
-const queryClient = new QueryClient();
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { user, isLoading } = useAuth();
 
-function AppLayout() {
+  if (isLoading) {
+    return <div>Loading authentication...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const AuthenticatedAppRoutes: React.FC = () => {
   const { user } = useAuth();
 
   if (!user) {
-    return <AppRoutes />;
+    return <Navigate to="/login" replace />;
   }
 
+  const filterRoutesByRole = (
+    routes: RouteConfig[],
+    userRole: typeof user.role
+  ): RouteConfig[] => {
+    return routes.filter((route) => {
+      const isRouteAllowed =
+        route.roles.includes("all") || route.roles.includes(userRole);
+
+      if (isRouteAllowed && route.children) {
+        const filteredChildren = filterRoutesByRole(route.children, userRole);
+        // Only include the parent route if it has children or has its own element
+        return filteredChildren.length > 0 || route.element !== null;
+      }
+
+      return isRouteAllowed;
+    });
+  };
+
+  const accessibleRoutes = filterRoutesByRole(allAppRoutes, user.role);
+
+  const renderRoutes = (routes: RouteConfig[]): React.ReactElement[] => {
+    return routes.map((route) => {
+      // For parent routes with children but no element, use Outlet
+      if (
+        route.children &&
+        route.children.length > 0 &&
+        route.element === null
+      ) {
+        return (
+          <Route key={route.path} path={route.path} element={<Outlet />}>
+            {renderRoutes(route.children)}
+          </Route>
+        );
+      }
+
+      // For routes with both element and children
+      if (
+        route.children &&
+        route.children.length > 0 &&
+        route.element !== null
+      ) {
+        return (
+          <Route key={route.path} path={route.path} element={route.element}>
+            {renderRoutes(route.children)}
+          </Route>
+        );
+      }
+
+      // For leaf routes (no children)
+      return (
+        <Route key={route.path} path={route.path} element={route.element} />
+      );
+    });
+  };
+
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopNav />
-        <main className="flex-1 overflow-y-auto p-4 bg-gray-50">
-          <Suspense fallback={<div>Loading...</div>}>
-            <AppRoutes />
-          </Suspense>
-        </main>
-      </div>
-    </div>
+    <Routes>
+      <Route index element={<Dashboard />} />
+      {renderRoutes(accessibleRoutes)}
+      <Route path="*" element={<div>404 - Page Not Found</div>} />
+    </Routes>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<AuthenticatedAppRoutes />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }
 
-export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AppLayout />
-        </AuthProvider>
-      </BrowserRouter>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  );
-}
+export default App;

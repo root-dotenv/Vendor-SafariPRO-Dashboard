@@ -1,0 +1,161 @@
+.searchContainer {
+  display: flex;
+  align-items: center;
+}
+
+.searchInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 40px;
+  min-width: 320px;
+  transition: all 0.2s ease;
+}
+
+.searchInputWrapper:focus-within {
+  border-color: #3c75f9;
+  box-shadow: 0 0 0 3px rgba(60, 117, 249, 0.1);
+}
+
+.searchIcon {
+  color: #6c757d;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+}
+
+/* Search Stats */
+.searchStats {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.statsText {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+}
+
+.searching {
+  font-size: 12px;
+  color: #3c75f9;
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Navigation Controls */
+.searchControls {
+  display: flex;
+  flex-direction: column;
+  margin-left: 4px;
+  gap: 1px;
+}
+
+.navButton {
+  background: transparent;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  width: 18px;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover:not(:disabled) {
+  background-color: #e9ecef;
+  color: #3c75f9;
+}
+
+.navButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Clear Button */
+.clearButton {
+  background: transparent;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 2px;
+  margin-left: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.clearButton:hover {
+  background-color: #e9ecef;
+  color: #dc3545;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .searchInputWrapper {
+    min-width: 250px;
+  }
+
+  .statsText {
+    min-width: 50px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .searchInputWrapper {
+    min-width: 200px;
+  }
+
+  .searchStats {
+    margin-left: 4px;
+  }
+
+  .statsText {
+    min-width: 40px;
+    font-size: 10px;
+  }
+
+  .navButton {
+    height: 16px;
+    width: 16px;
+  }
+}

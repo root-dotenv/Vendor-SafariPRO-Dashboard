@@ -1,0 +1,133 @@
+.navbar {
+  width: 100vw;
+  height: 64px;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Updated styles for the enhanced TopNavbar */
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100vw;
+  gap: 1rem;
+}
+
+.logoSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.hotelLogo {
+  border-radius: 4px;
+}
+
+.hotelName {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Center section for search bar */
+.centerSection {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 500px;
+  margin: 0 2rem;
+}
+
+/* Right section for user controls */
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.actionIcons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Legacy styles - keeping for backward compatibility */
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.username {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #6c757d;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logoutButton:hover {
+  background-color: #f8f9fa;
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.logoutText {
+  font-weight: 500;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .centerSection {
+    margin: 0 1rem;
+    max-width: none;
+  }
+
+  .container {
+    gap: 0.5rem;
+  }
+
+  .hotelName {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .centerSection {
+    display: none; /* Hide search bar on very small screens */
+  }
+
+  .actionIcons {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hotelName {
+    display: none; /* Hide hotel name on very small screens */
+  }
+
+  .logoSection {
+    gap: 8px;
+  }
+}
