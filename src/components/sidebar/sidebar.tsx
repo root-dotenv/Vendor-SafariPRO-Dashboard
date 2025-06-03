@@ -318,7 +318,7 @@ const SideNavbar: React.FC<SideNavbarProps> = ({
           ))}
         </div>
         {/* Expand/Collapse Sidebar Button */}
-        <div className="mb-[1rem] mt-[1rem] pl-[0.75rem] w-full flex items-center">
+        <div className="pl-[0.75rem] mb-[5rem] w-full flex items-center">
           {isExpanded ? (
             <span
               onClick={toggleSidebar}

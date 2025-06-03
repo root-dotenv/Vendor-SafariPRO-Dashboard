@@ -21,5 +21,213 @@
       "password": "staff@123",
       "role": "staff"
     }
+  ],
+  "room-types": [
+    {
+      "id": "deluxe",
+      "area": "30 sqm",
+      "bedType": "King Bed",
+      "guestCapacity": 2,
+      "price": "$150",
+      "availability": 30,
+      "description": "Our Deluxe Room offers a spacious and elegantly appointed sanctuary for discerning travelers. Featuring a luxurious king-size bed and sophisticated decor, it provides the perfect blend of comfort and style. Enjoy ample space to relax and unwind after a day of exploring, with modern conveniences designed to enhance your stay. Ideal for couples seeking a tranquil and upscale retreat.",
+      "features": [
+        "Panoramic city views",
+        "Plush bathrobes and slippers",
+        "Executive writing desk",
+        "Complimentary daily newspaper",
+        "Soundproofed windows"
+      ],
+      "facilities": {
+        "wifi": true,
+        "safeLock": true,
+        "TV": true,
+        "AC": true,
+        "MiniFridge": true,
+        "CoffeeMaker": true
+      },
+      "images": [
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/581653860.webp?k=229fadde6dd8ec816c57ccdcfe36980823206c60a4716a02fbbaecea20229427&o=",
+          "alt": "Deluxe Room Interior 1"
+        },
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/474824266.webp?k=104a06bb34f4af6d33b6932966a42e9bc99b1357e3f6a8382cc0a518107fc029&o=",
+          "alt": "Deluxe Room Interior 2"
+        }
+      ],
+      "amenities": [
+        "24-hour room service",
+        "Turndown service",
+        "Welcome fruit platter",
+        "Access to executive lounge"
+      ]
+    },
+    {
+      "id": "standard",
+      "area": "20 sqm",
+      "bedType": "Queen Bed",
+      "guestCapacity": 2,
+      "price": "$75",
+      "availability": 25,
+      "description": "Our Standard Room offers a cozy and comfortable stay, perfect for solo travelers or couples on a budget. Featuring a comfortable queen-size bed and essential amenities, this room provides a clean and functional space for your visit. It’s designed to offer a restful night's sleep and convenient access to all hotel facilities, ensuring a pleasant and hassle-free experience during your stay in Dar es Salaam.",
+      "features": [
+        "Work desk with lamp",
+        "Spacious wardrobe",
+        "Blackout curtains",
+        "In-room phone"
+      ],
+      "facilities": {
+        "wifi": true,
+        "safeLock": true,
+        "TV": true,
+        "AC": true,
+        "MiniFridge": false,
+        "CoffeeMaker": true
+      },
+      "images": [
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/527051208.webp?k=d04eff00f5e5f9314087c38ce93ba4fc2ecd6c19c0e1b3eec7fdf6e14c432c04&o=",
+          "alt": "Standard Room Interior 1"
+        },
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/474824266.webp?k=104a06bb34f4af6d33b6932966a42e9bc99b1357e3f6a8382cc0a518107fc029&o=",
+          "alt": "Standard Room Interior 2"
+        }
+      ],
+      "amenities": [
+        "Complimentary toiletries",
+        "Hair dryer",
+        "Wake-up service",
+        "Ironing facilities (upon request)"
+      ]
+    },
+    {
+      "id": "suite",
+      "area": "50 sqm",
+      "bedType": "King Bed",
+      "guestCapacity": 3,
+      "price": "$250",
+      "availability": 10,
+      "description": "Our luxurious Suite offers an expansive and sophisticated retreat, perfect for extended stays or those desiring extra space and privacy. Featuring a separate living area and a sumptuously appointed bedroom, this suite provides distinct zones for relaxation, work, and entertainment. Guests will appreciate the elegant design, premium amenities, and personalized service, ensuring an unparalleled experience of comfort and exclusivity. It's the ideal choice for discerning guests seeking a truly elevated and residential feel during their stay.",
+      "features": [
+        "Private balcony",
+        "Spacious layout with modern design",
+        "Work desk with lamp",
+        "Large windows offering city and garden view",
+        "Premium sound system"
+      ],
+      "facilities": {
+        "wifi": true,
+        "safeLock": true,
+        "TV": true,
+        "AC": true,
+        "MiniFridge": true,
+        "CoffeeMaker": true
+      },
+      "images": [
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/581653860.webp?k=229fadde6dd8ec816c57ccdcfe36980823206c60a4716a02fbbaecea20229427&o=",
+          "alt": "Luxury Room Interior 1"
+        },
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/474824266.webp?k=104a06bb34f4af6d33b6932966a42e9bc99b1357e3f6a8382cc0a518107fc029&o=",
+          "alt": "Luxury Room Interior 2"
+        }
+      ],
+      "amenities": [
+        "Personal butler service",
+        "Complimentary airport transfer",
+        "Access to private dining",
+        "Designer bath amenities",
+        "Pillow menu",
+        "Daily fruit and wine selection"
+      ]
+    },
+    {
+      "id": "luxury",
+      "area": "45 sqm",
+      "bedType": "Super King Bed",
+      "guestCapacity": 2,
+      "price": "$320",
+      "availability": 25,
+      "description": "Experience unparalleled opulence in our Luxury Room, a true haven of comfort and extravagance. Boasting a magnificent super king-size bed and meticulously curated furnishings, this room redefines upscale accommodation. Enjoy panoramic views and expansive living space, designed for ultimate relaxation and indulgence. Perfect for those seeking a truly memorable and lavish escape with premium amenities and personalized service at every turn.",
+      "features": [
+        "Dedicated lounge area",
+        "Private balcony",
+        "Smart home controls",
+        "Walk-in shower and separate bathtub",
+        "Espresso machine",
+        "Premium sound system"
+      ],
+      "facilities": {
+        "wifi": true,
+        "safeLock": true,
+        "TV": true,
+        "AC": true,
+        "MiniFridge": true,
+        "CoffeeMaker": true
+      },
+      "images": [
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/581653860.webp?k=229fadde6dd8ec816c57ccdcfe36980823206c60a4716a02fbbaecea20229427&o=",
+          "alt": "Luxury Room Interior 1"
+        },
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/474824266.webp?k=104a06bb34f4af6d33b6932966a42e9bc99b1357e3f6a8382cc0a518107fc029&o=",
+          "alt": "Luxury Room Interior 2"
+        }
+      ],
+      "amenities": [
+        "Personal butler service",
+        "Complimentary airport transfer",
+        "Access to private dining",
+        "Designer bath amenities",
+        "Pillow menu",
+        "Daily fruit and wine selection"
+      ]
+    },
+    {
+      "id": "family",
+      "area": "55 sqm",
+      "bedType": "1 King Bed, 2-Twin Bed",
+      "guestCapacity": 4,
+      "price": "$200",
+      "availability": 15,
+      "description": "Our Family Room provides generous space and thoughtful amenities, making it ideal for families traveling together. Featuring a comfortable king-size bed and two twin beds, it offers ample sleeping arrangements for everyone. Designed with family comfort in mind, this room ensures a relaxing and convenient stay with separate areas for relaxation and play. Create lasting memories in a welcoming environment that caters to the needs of all ages.",
+      "features": [
+        "Separate living area",
+        "Kids' amenities kit",
+        "Connecting room option",
+        "Two bathrooms",
+        "Children's entertainment channels",
+        "Dining table"
+      ],
+      "facilities": {
+        "wifi": true,
+        "safeLock": true,
+        "TV": true,
+        "AC": true,
+        "MiniFridge": true,
+        "CoffeeMaker": true
+      },
+      "images": [
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/527051208.webp?k=d04eff00f5e5f9314087c38ce93ba4fc2ecd6c19c0e1b3eec7fdf6e14c432c04&o=",
+          "alt": "Family Room Interior 1"
+        },
+        {
+          "src": "https://cf.bstatic.com/xdata/images/hotel/square240/474824266.webp?k=104a06bb34f4af6d33b6932966a42e9bc99b1357e3f6a8382cc0a518107fc029&o=",
+          "alt": "Family Room Interior 2"
+        }
+      ],
+      "amenities": [
+        "Complimentary breakfast for all guests",
+        "Board games and books",
+        "Microwave upon request",
+        "Crib or extra bed available",
+        "Child-friendly toiletries"
+      ]
+    }
   ]
 }

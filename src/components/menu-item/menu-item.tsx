@@ -10,9 +10,11 @@ import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 import SubMenuItem from "./sub-menu-item/sub-menu-item";
 import TooltipCard from "../ui/tooltip/tooltip-card";
 
+// Updated interface to match what SideNavbar passes
 interface SubRoute {
   to: string;
   text: string;
+  roles: ("admin" | "staff")[]; // Added roles property
 }
 
 interface MenuItemProps {
@@ -55,7 +57,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
         const rect = menuItemRef.current.getBoundingClientRect();
         setTooltipPosition({
           top: rect.top,
-          left: rect.right + 20, // 20px gap from sidebar for debugging
+          left: rect.right + 20,
         });
       }
       setShowTooltip(!showTooltip);
@@ -66,6 +68,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
   };
 
   const handleTooltipItemClick = (route: string) => {
+    console.log("Navigating to:", route); // Debug log
     navigate(route);
     setShowTooltip(false);
   };
@@ -101,7 +104,6 @@ const MenuItem: React.FC<MenuItemProps> = ({
     <>
       <li className={`${styles.menuItem}`} ref={menuItemRef}>
         {isExpanded ? (
-          // Expanded mode (original behavior)
           <>
             <NavLink
               to={to}
@@ -135,26 +137,18 @@ const MenuItem: React.FC<MenuItemProps> = ({
             )}
           </>
         ) : (
-          // Collapsed mode
           <div
-            className={`${styles.link} ${match ? styles.active : ""}`}
+            className={`${styles.link} ${
+              match ? styles.active : ""
+            } cursor-pointer flex items-center justify-center p-[0.75rem] rounded-md transition-all`}
             onClick={handleCollapsedClick}
-            style={{
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "12px",
-              borderRadius: "8px",
-              transition: "background-color 0.2s ease",
-            }}
           >
             <div className={styles.icon}>{icon}</div>
           </div>
         )}
       </li>
 
-      {/* Tooltip Card - Rendered outside the sidebar */}
+      {/* - - - Tooltip Card */}
       {!isExpanded && (
         <TooltipCard
           isVisible={showTooltip && hasSubRoutes}

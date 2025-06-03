@@ -1,16 +1,3 @@
-.sidebar {
-  width: 64px;
-  background-color: #ffffff;
-  color: #525b75;
-  transition: width 0.2s ease-in-out;
-  flex-shrink: 0;
-  position: sticky;
-  left: 0;
-  max-height: 100vh;
-  overflow-y: auto;
-  z-index: z-30;
-}
-
 .sidebar.expanded {
   width: 290px;
 }
@@ -28,10 +15,12 @@
   transition: width 0.2s ease-in-out;
   flex-shrink: 0;
   position: sticky;
+  top: 64px;
   left: 0;
+  height: 100vh;
   max-height: 100vh;
   overflow-y: auto;
-  overflow-x: visible; /* Allow tooltip to extend beyond sidebar */
+  overflow-x: visible;
   z-index: 30;
 }
 
