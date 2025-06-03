@@ -24,7 +24,7 @@ const Layout: React.FC = () => {
         <main
           className={`${styles.mainContent} ${
             isSidebarExpanded ? "" : styles.mainContentCollapsed
-          }`}
+          } bg-[#f8f8f8] z-20`}
         >
           <Outlet />
         </main>

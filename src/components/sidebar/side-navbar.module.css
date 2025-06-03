@@ -20,3 +20,32 @@
   padding: 0;
   margin: 0;
 }
+
+.sidebar {
+  width: 64px;
+  background-color: #ffffff;
+  color: #525b75;
+  transition: width 0.2s ease-in-out;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: visible; /* Allow tooltip to extend beyond sidebar */
+  z-index: 30;
+}
+
+.sidebar.expanded {
+  width: 290px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Ensure the sidebar container doesn't clip tooltips */
+.sidebar.collapsed {
+  overflow-x: visible;
+}

@@ -232,7 +232,7 @@ export const allAppRoutes: RouteConfig[] = [
   },
   {
     path: "settings",
-    element: <Outlet />, // Use Outlet instead of null
+    element: <Outlet />,
     roles: ["admin", "staff"],
     children: [
       { path: "theme", element: <Theme />, roles: ["admin", "staff"] },

@@ -12,7 +12,7 @@
 .mainContent {
   flex-grow: 1;
   transition: margin-left 0.3s ease-in-out;
-  background: #f8f8f8;
+  /* background: #f8f8f8; */
 }
 
 .mainContentCollapsed {

@@ -1,6 +1,6 @@
-import styles from "./side-navbar.module.css"; // Your existing CSS module
-import MenuItem from "../menu-item/menu-item"; // Your existing MenuItem component
-import { useAuth } from "../../contexts/authcontext"; // Import useAuth hook
+import styles from "./side-navbar.module.css";
+import MenuItem from "../menu-item/menu-item";
+import { useAuth } from "../../contexts/authcontext";
 import {
   HiOutlineTicket,
   HiOutlineStar,
@@ -22,18 +22,18 @@ import { BsBoxes } from "react-icons/bs";
 interface SubRoute {
   to: string;
   text: string;
-  roles: ("admin" | "staff")[]; // Define roles for sub-routes
+  roles: ("admin" | "staff")[]; // - - - Roles for sub-routes
 }
 
 interface MenuItemConfig {
   to: string;
   icon: React.ReactNode;
   text: string;
-  roles: ("admin" | "staff")[]; // Define roles for main menu items
+  roles: ("admin" | "staff")[]; // - - - Roles for main menu items
   subRoutes?: SubRoute[];
 }
 
-// Define your entire menu structure with roles
+// * - - Menu structure with roles
 const menuConfig: MenuItemConfig[] = [
   {
     to: "/dashboard",
@@ -68,12 +68,13 @@ const menuConfig: MenuItemConfig[] = [
   {
     to: "/safari-pro-bookings",
     icon: (
-      <img
-        className="block"
-        src={safari_pro_logo}
-        alt="safari_pro_bookings"
-        width={20}
-      />
+      <div className="w-[22px] h-[22px] flex items-center justify-center">
+        <img
+          className="max-w-full max-h-full"
+          src={safari_pro_logo}
+          alt="safari_pro_bookings"
+        />
+      </div>
     ),
     text: "SafariPro Bookings",
     roles: ["admin", "staff"],
@@ -94,7 +95,7 @@ const menuConfig: MenuItemConfig[] = [
     to: "/rooms",
     icon: <MdOutlineHotel size={20} />,
     text: "Rooms",
-    roles: ["admin"], // Only admin can access
+    roles: ["admin"],
     subRoutes: [
       { to: "/rooms/add-room", text: "Add Room", roles: ["admin"] },
       { to: "/rooms/all-rooms", text: "All Rooms", roles: ["admin"] },
@@ -104,7 +105,7 @@ const menuConfig: MenuItemConfig[] = [
     to: "/my-hotel",
     icon: <RiHotelLine size={20} />,
     text: "My Hotel",
-    roles: ["admin"], // Only admin can access
+    roles: ["admin"],
     subRoutes: [
       {
         to: "/my-hotel/hotel-facilities",
@@ -140,15 +141,15 @@ const menuConfig: MenuItemConfig[] = [
     subRoutes: [
       { to: "/messages/sent", text: "Sent", roles: ["admin", "staff"] },
       { to: "/messages/inbox", text: "Inbox", roles: ["admin", "staff"] },
-      { to: "/messages/compose", text: "Compose", roles: ["admin"] }, // Admin only
-      { to: "/messages/admin-alerts", text: "Admin Alerts", roles: ["admin"] }, // Admin only
+      { to: "/messages/compose", text: "Compose", roles: ["admin"] }, // - - - [Admin]
+      { to: "/messages/admin-alerts", text: "Admin Alerts", roles: ["admin"] }, // - - - [Admin]
     ],
   },
   {
     to: "/financial",
     icon: <RiMoneyDollarBoxLine size={20} />,
     text: "Financial",
-    roles: ["admin"], // Only admin can access
+    roles: ["admin"], // - - - Only admin can access
     subRoutes: [
       { to: "/financial/invoice", text: "Invoice", roles: ["admin"] },
       { to: "/financial/expenses", text: "Expenses", roles: ["admin"] },
@@ -169,7 +170,7 @@ const menuConfig: MenuItemConfig[] = [
         to: "/house-keeping/assign-tasks",
         text: "Assign Task",
         roles: ["admin"],
-      }, // Admin only
+      }, // - - - Admin only
       {
         to: "/house-keeping/lost-and-found",
         text: "Lost and Found",
