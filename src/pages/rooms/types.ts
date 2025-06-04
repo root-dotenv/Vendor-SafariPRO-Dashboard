@@ -1,41 +1,21 @@
 /**
- * @interface Image
- * @description Represents a single image for a room type.
- */
-export interface Image {
-  src: string;
-  alt: string;
-}
-
-/**
- * @interface Facilities
- * @description Defines the boolean flags for various in-room facilities.
- */
-export interface Facilities {
-  wifi: boolean;
-  safeLock: boolean;
-  TV: boolean;
-  AC: boolean;
-  MiniFridge: boolean;
-  CoffeeMaker: boolean;
-}
-
-/**
  * @interface RoomType
- * @description Defines the structure for a single hotel room type.
+ * @description Defines the structure for a single hotel room type based on updated backend API.
  */
 export interface RoomType {
-  id: "deluxe" | "standard" | "luxury" | "suite" | "family-room";
-  area: string;
-  bedType: string;
-  guestCapacity: number;
-  price: string;
-  availability: number;
+  id: string;
+  name: string;
+  code: string;
   description: string;
+  image: string;
+  size_sqm: string | null | number;
+  base_price: string;
   features: string[];
-  facilities: Facilities;
-  images: Image[];
   amenities: string[];
+  is_active: boolean;
+  max_occupancy: number;
+  bed_type: string;
+  room_availability: number;
 }
 
 /**

@@ -8,8 +8,11 @@ import SearchBar from "../ui/search-bar/search-bar";
 import NotificationBell from "../ui/notification-bell/notification-bell";
 import MessageIcon from "../ui/message-icon/message-icon";
 import UserDropdown from "../ui/user-dropdown/user-dropdown";
+import { useHotelContext } from "../../contexts/hotelContext";
 
 const TopNavbar = () => {
+  const hotel = useHotelContext();
+
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -48,7 +51,11 @@ const TopNavbar = () => {
             width={32}
             alt="hotel-logo"
           />
-          <h1 className={`${styles.hotelName} text-[#3c75f9]`}>Oasis</h1>
+          <h1
+            className={`${styles.hotelName} text-[1.75rem] text-[#3c75f9] font-bold`}
+          >
+            {hotel.name}
+          </h1>
         </div>
 
         {/* Center Section - Search Bar */}

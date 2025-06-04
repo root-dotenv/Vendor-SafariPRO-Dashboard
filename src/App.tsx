@@ -4,6 +4,8 @@ import Login from "./pages/authentication/login/login";
 import { AuthProvider, useAuth } from "./contexts/authcontext";
 import Dashboard from "./pages/dashboard/dashboard";
 import { allAppRoutes, type RouteConfig } from "./routes";
+import { HotelProvider } from "./contexts/hotelContext";
+import { useHotel } from "./hooks/useHotel";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -93,23 +95,29 @@ const AuthenticatedAppRoutes: React.FC = () => {
 };
 
 function App() {
+  const { data: hotel } = useHotel();
+
+  if (!hotel) return <div>Loading...</div>;
+
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/*"
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="*" element={<AuthenticatedAppRoutes />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </AuthProvider>
+    <HotelProvider value={hotel}>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="*" element={<AuthenticatedAppRoutes />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </AuthProvider>
+    </HotelProvider>
   );
 }
 

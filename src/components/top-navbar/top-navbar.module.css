@@ -32,8 +32,6 @@
 }
 
 .hotelName {
-  font-size: 24px;
-  font-weight: 700;
   margin: 0;
 }
 
@@ -124,7 +122,7 @@
 
 @media (max-width: 480px) {
   .hotelName {
-    display: none; /* Hide hotel name on very small screens */
+    display: none;
   }
 
   .logoSection {
