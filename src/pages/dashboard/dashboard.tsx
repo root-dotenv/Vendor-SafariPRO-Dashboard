@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react"; // Import useState and useEffect
 import styles from "./dashboard.module.css";
 import {
   FaBed,
@@ -11,6 +12,8 @@ import {
   FaUtensils,
   FaParking,
   FaRegCalendarCheck,
+  FaDumbbell,
+  FaSpa,
 } from "react-icons/fa";
 import {
   PieChart,
@@ -27,136 +30,74 @@ import {
 } from "recharts";
 import { useHotelContext } from "../../contexts/hotelContext";
 
+// Define an interface for a single facility detail response
+interface FacilityDetail {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  icon: string | null; // Assuming icon could be a URL or a specific identifier
+  // ... other properties from your API response if needed
+}
+
 const Dashboard = () => {
   const hotel = useHotelContext();
   console.log(`- - - Hotel Context`);
   console.log(hotel);
 
-  const hotelData = {
-    name: "Grand Paradise Resort",
-    star_rating: 5,
-    address: "123 Ocean View Drive, Miami, FL",
-    average_rating: "4.8",
-    review_count: 1245,
-    occupancy_rate: 78,
-    average_room_price: 249,
-    number_rooms: 120,
-    number_floors: 12,
-    number_restaurants: 3,
-    number_bars: 2,
-    number_parks: 1,
-    number_halls: 4,
-    is_superhost: true,
-    is_eco_certified: true,
-    year_built: 2015,
-    check_in_from: "3:00 PM",
-    check_out_to: "11:00 AM",
-    facilities: [
-      "Free WiFi",
-      "Swimming Pool",
-      "Spa",
-      "Fitness Center",
-      "Restaurant",
-      "Parking",
-    ],
-    room_types: [
-      {
-        name: "Deluxe Room",
-        max_occupancy: 2,
-        bed_type: "King",
-        availability: {
-          available_rooms: 25,
-          booked_rooms: 15,
-          maintenance_rooms: 2,
-          total_rooms: 42,
-          occupancy_percentage: 65,
-        },
-        pricing: {
-          min_price: 199,
-          max_price: 299,
-          avg_price: 249,
-        },
-      },
-      {
-        name: "Executive Suite",
-        max_occupancy: 4,
-        bed_type: "King + Sofa Bed",
-        availability: {
-          available_rooms: 8,
-          booked_rooms: 12,
-          maintenance_rooms: 1,
-          total_rooms: 21,
-          occupancy_percentage: 75,
-        },
-        pricing: {
-          min_price: 349,
-          max_price: 499,
-          avg_price: 399,
-        },
-      },
-      {
-        name: "Presidential Suite",
-        max_occupancy: 6,
-        bed_type: "2 Kings",
-        availability: {
-          available_rooms: 2,
-          booked_rooms: 3,
-          maintenance_rooms: 0,
-          total_rooms: 5,
-          occupancy_percentage: 80,
-        },
-        pricing: {
-          min_price: 799,
-          max_price: 999,
-          avg_price: 849,
-        },
-      },
-    ],
-    availability_stats: {
-      occupancy_rate: 78,
-      last_updated: "2023-06-15T10:30:00Z",
-    },
-    pricing_data: {
-      min: 199,
-      max: 999,
-      avg: 349,
-      currency: "USD",
-      has_promotions: true,
-    },
-    summary_counts: {
-      rooms: 120,
-      images: 45,
-      reviews: 1245,
-      staff: 85,
-      event_spaces: 4,
-      promotions: 3,
-      available_rooms: 65,
-      maintenance_requests: 5,
-    },
-  };
+  // State to store fetched facility details
+  const [facilitiesDetails, setFacilitiesDetails] = useState<FacilityDetail[]>(
+    []
+  );
+  const API_BASE_URL = "https://hotel.tradesync.software/api/v1";
 
-  // Data for charts
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      if (hotel && hotel.facilities && hotel.facilities.length > 0) {
+        const fetchedDetails: FacilityDetail[] = [];
+        for (const facilityId of hotel.facilities) {
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/facilities/${facilityId}`
+            );
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data: FacilityDetail = await response.json();
+            fetchedDetails.push(data);
+          } catch (error) {
+            console.error(`Failed to fetch facility ${facilityId}:`, error);
+          }
+        }
+        setFacilitiesDetails(fetchedDetails);
+      } else {
+        setFacilitiesDetails([]); // Clear facilities if none are present in hotel data
+      }
+    };
+
+    fetchFacilities();
+  }, [hotel]); // Re-run effect if hotel object changes (e.g., on context update)
+
+  // Data for charts - NOW DYNAMICALLY FETCHED FROM 'hotel' CONTEXT
   const roomStatusData = [
     {
       name: "Available",
-      value: hotelData.summary_counts.available_rooms,
-      color: "#4CAF50",
+      value: hotel.availability_stats.status_counts.Available || 0,
+      color: "#4CAF50", // Green
     },
     {
       name: "Booked",
-      value:
-        hotelData.summary_counts.rooms -
-        hotelData.summary_counts.available_rooms,
-      color: "#F44336",
+      value: hotel.availability_stats.status_counts.Booked || 0,
+      color: "#F44336", // Red
     },
     {
       name: "Maintenance",
-      value: hotelData.summary_counts.maintenance_requests,
-      color: "#FFC107",
+      value: hotel.availability_stats.status_counts.Maintenance || 0,
+      color: "#FFC107", // Amber
     },
   ];
 
-  const roomTypeData = hotelData.room_types.map((room) => ({
+  const roomTypeData = hotel.room_type.map((room) => ({
     name: room.name,
     available: room.availability.available_rooms,
     booked: room.availability.booked_rooms,
@@ -164,13 +105,34 @@ const Dashboard = () => {
   }));
 
   const pricingData = [
-    { name: "Min", price: hotelData.pricing_data.min },
-    { name: "Avg", price: hotelData.pricing_data.avg },
-    { name: "Max", price: hotelData.pricing_data.max },
+    { name: "Min", price: hotel.pricing_data.min },
+    { name: "Avg", price: hotel.pricing_data.avg },
+    { name: "Max", price: hotel.pricing_data.max },
   ];
 
-  const difference = (a: number, b: number) => {
-    return a - b;
+  // This `difference` function seems unrelated to the current usage
+  // const difference = (a: number, b: number) => {
+  //   return a - b;
+  // };
+
+  // Helper function to render icons based on facility name
+  const getFacilityIcon = (facilityName: string) => {
+    switch (facilityName.toLowerCase()) {
+      case "free wifi":
+        return <FaWifi />;
+      case "swimming pool":
+        return <FaSwimmingPool />;
+      case "restaurant":
+        return <FaUtensils />;
+      case "parking":
+        return <FaParking />;
+      case "fitness center": // Example for another common facility
+        return <FaDumbbell />;
+      case "spa": // Example for another common facility
+        return <FaSpa />;
+      default:
+        return null; // No specific icon, or you can use a generic one
+    }
   };
 
   return (
@@ -188,23 +150,17 @@ const Dashboard = () => {
           </div>
           <div className={styles.cardContent}>
             <p>
-              Total Rooms:{" "}
+              Total Rooms: <strong>{hotel.summary_counts.rooms}</strong>
+            </p>
+            <p>
+              Available:
               <strong>
                 {hotel.availability_stats.status_counts.Available}
               </strong>
             </p>
             <p>
-              Available:
-              <strong>
-                {difference(
-                  hotel.availability_stats.status_counts.Available ?? 0,
-                  hotel.availability_stats.status_counts.Booked ?? 0
-                )}
-              </strong>
-            </p>
-            <p>
               Occupancy Rate:
-              <strong>{hotel.availability_stats.occupancy_rate}</strong>
+              <strong>{hotel.occupancy_rate?.toFixed(2)}%</strong>
             </p>
           </div>
         </div>
@@ -216,13 +172,14 @@ const Dashboard = () => {
           </div>
           <div className={styles.cardContent}>
             <p>
-              Avg. Room Price: <strong>${hotel.average_room_price}</strong>
+              Avg. Room Price:{" "}
+              <strong>${hotel.average_room_price?.toFixed(2)}</strong>
             </p>
             <p>
-              Min: <strong>${hotelData.pricing_data.min}</strong>
+              Min: <strong>${hotel.pricing_data.min?.toFixed(2)}</strong>
             </p>
             <p>
-              Max: <strong>${hotelData.pricing_data.max}</strong>
+              Max: <strong>${hotel.pricing_data.max?.toFixed(2)}</strong>
             </p>
           </div>
         </div>
@@ -234,7 +191,7 @@ const Dashboard = () => {
           </div>
           <div className={styles.cardContent}>
             <p>
-              Average Rating: <strong>{hotel.star_rating}/5</strong>
+              Average Rating: <strong>{hotel.average_rating}/5</strong>
             </p>
             <p>
               Total Reviews: <strong>{hotel.review_count}</strong>
@@ -386,27 +343,32 @@ const Dashboard = () => {
               </div>
             </div>
             <div className={styles.infoItem}>
-              <FaWifi className={styles.infoIcon} />
+              <FaWifi className={styles.infoIcon} />{" "}
+              {/* Generic icon for facilities count */}
               <div>
                 <p>Facilities</p>
                 <p>
-                  <strong>{hotel.facilities.length}</strong>
+                  <strong>{hotel.facilities?.length || 0}</strong>
                 </p>
               </div>
             </div>
           </div>
 
+          {/* --- Top Facilities --- */}
           <h4>Top Facilities</h4>
           <div className={styles.facilities}>
-            {hotelData.facilities.slice(0, 6).map((facility, index) => (
-              <span key={index} className={styles.facilityTag}>
-                {facility === "Free WiFi" && <FaWifi />}
-                {facility === "Swimming Pool" && <FaSwimmingPool />}
-                {facility === "Restaurant" && <FaUtensils />}
-                {facility === "Parking" && <FaParking />}
-                {facility}
+            {facilitiesDetails.slice(0, 6).map((facility) => (
+              <span key={facility.id} className={styles.facilityTag}>
+                {getFacilityIcon(facility.name)}
+                {facility.name}
               </span>
             ))}
+            {facilitiesDetails.length === 0 && hotel.facilities?.length > 0 && (
+              <p>Loading facilities...</p>
+            )}
+            {hotel.facilities?.length === 0 && (
+              <p>No facilities listed for this hotel.</p>
+            )}
           </div>
         </div>
       </div>
@@ -438,8 +400,8 @@ const Dashboard = () => {
                   <td>{room.availability.available_rooms}</td>
                   <td>{room.availability.maintenance_rooms}</td>
                   <td>{room.availability.booked_rooms}</td>
-                  <td>{room.availability.occupancy_percentage}%</td>
-                  <td>${room.pricing.avg_price}</td>
+                  <td>{room.availability.occupancy_percentage?.toFixed(2)}%</td>
+                  <td>${room.pricing.avg_price?.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
