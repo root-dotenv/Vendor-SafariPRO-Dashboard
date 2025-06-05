@@ -5,3 +5,5 @@ export default function AllBookings() {
     </div>
   );
 }
+
+// ("http://booking.tradesync.software/api/v1/bookings?microservice_item_id=bf085741-2796-406c-86ef-0216a5bccc8b");

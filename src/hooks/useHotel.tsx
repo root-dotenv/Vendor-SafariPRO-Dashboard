@@ -7,7 +7,7 @@ export const useHotel = () => {
     queryKey: ["hotel"],
     queryFn: async () => {
       const response = await axios.get(
-        `https://hotel.tradesync.software/api/v1/hotels/19db360e-bf01-4865-93e0-4880a6bd33f0`
+        `https://hotel.tradesync.software/api/v1/hotels/bf085741-2796-406c-86ef-0216a5bccc8b`
       );
 
       return response.data;
