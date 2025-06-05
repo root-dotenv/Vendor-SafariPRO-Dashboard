@@ -6,8 +6,11 @@ export const useHotel = () => {
   return useQuery<Hotel>({
     queryKey: ["hotel"],
     queryFn: async () => {
+      // const response = await axios.get(
+      //   `https://hotel.tradesync.software/api/v1/hotels/165cb32f-7cbc-48a0-adf5-8380e59226f1/`
+      // );
       const response = await axios.get(
-        `https://hotel.tradesync.software/api/v1/hotels/165cb32f-7cbc-48a0-adf5-8380e59226f1/`
+        `https://hotel.tradesync.software/api/v1/meal-types/`
       );
       return response.data;
     },
