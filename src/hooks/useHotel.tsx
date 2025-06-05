@@ -6,12 +6,10 @@ export const useHotel = () => {
   return useQuery<Hotel>({
     queryKey: ["hotel"],
     queryFn: async () => {
-      // const response = await axios.get(
-      //   `https://hotel.tradesync.software/api/v1/hotels/165cb32f-7cbc-48a0-adf5-8380e59226f1/`
-      // );
       const response = await axios.get(
-        `https://hotel.tradesync.software/api/v1/meal-types/`
+        `https://hotel.tradesync.software/api/v1/hotels/10aaa2cb-6ad5-469d-9b0d-1b02326cd6d0/`
       );
+
       return response.data;
     },
   });

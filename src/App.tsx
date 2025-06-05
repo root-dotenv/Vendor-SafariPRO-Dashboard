@@ -6,6 +6,7 @@ import Dashboard from "./pages/dashboard/dashboard";
 import { allAppRoutes, type RouteConfig } from "./routes";
 import { HotelProvider } from "./contexts/hotelContext";
 import { useHotel } from "./hooks/useHotel";
+import { useEffect } from "react";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -95,6 +96,18 @@ const AuthenticatedAppRoutes: React.FC = () => {
 };
 
 function App() {
+  // Attempt to load Leaflet CSS if not already present (idempotent)
+  useEffect(() => {
+    const leafletCSSId = "leaflet-main-css";
+    if (!document.getElementById(leafletCSSId)) {
+      const link = document.createElement("link");
+      link.id = leafletCSSId;
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+  }, []);
+
   const { data: hotel } = useHotel();
 
   if (!hotel) return <div>Loading...</div>;
