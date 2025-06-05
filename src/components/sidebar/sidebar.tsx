@@ -162,8 +162,8 @@ const menuConfig: MenuItemConfig[] = [
     roles: ["admin", "staff"],
     subRoutes: [
       {
-        to: "/house-keeping/rooms-status",
-        text: "Room Status",
+        to: "/house-keeping/house-keeping-tasks",
+        text: "House Keeping Tasks",
         roles: ["admin", "staff"],
       },
       {

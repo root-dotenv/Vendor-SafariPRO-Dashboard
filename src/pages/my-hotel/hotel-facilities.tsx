@@ -2,16 +2,27 @@ import React, { useState } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { useHotelContext } from "../../contexts/hotelContext";
 import axios from "axios";
-import { FaCheck, FaSort, FaSortUp, FaSortDown } from "react-icons/fa6";
+import { FaCheck, FaSort, FaSortUp, FaSortDown, FaPlus } from "react-icons/fa6";
 import { RxCross2 } from "react-icons/rx";
-import styles from "./facilities.module.css";
+import styles from "./hotel-facilities.module.css";
 import { BsUiChecksGrid } from "react-icons/bs";
-import { MdEdit } from "react-icons/md";
+import { MdClose } from "react-icons/md";
 
 export default function HotelFacilitiesTable() {
   const hotel = useHotelContext();
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [filterActive, setFilterActive] = useState("all");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    code: "",
+    description: "",
+    category_id: null,
+    fee_applies: false,
+    reservation_required: false,
+    additional_info: "",
+    is_active: false,
+  });
 
   console.log(`- - - Debugging: useHotelContext Data`);
   console.log(hotel.facilities);
@@ -34,9 +45,7 @@ export default function HotelFacilitiesTable() {
   });
 
   const isLoading = facilityQueries.some((query) => query.isLoading);
-
   const isError = facilityQueries.some((query) => query.isError);
-
   const errors = facilityQueries
     .filter((query) => query.isError)
     .map((query) => query.error);
@@ -59,6 +68,45 @@ export default function HotelFacilitiesTable() {
       return <FaSort className="opacity-50" />;
     }
     return sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />;
+  };
+
+  // Modal handlers
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      name: "",
+      code: "",
+      description: "",
+      category_id: null,
+      fee_applies: false,
+      reservation_required: false,
+      additional_info: "",
+      is_active: false,
+    });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Add your API call here to create the facility
+      console.log("Submitting facility:", formData);
+      // await axios.post('your-api-endpoint', formData);
+      closeModal();
+    } catch (error) {
+      console.error("Error creating facility:", error);
+    }
   };
 
   const sortedAndFilteredData = React.useMemo(() => {
@@ -129,8 +177,11 @@ export default function HotelFacilitiesTable() {
         </h2>
 
         <div className="flex items-center gap-3">
-          <button className="gap-[6px] bg-[#10b981] text-[#FFF] px-4 py-[6px] rounded-md cursor-pointer hover:bg-[#10b981] transition text-[0.875rem] flex items-cente font-medium">
-            <MdEdit size={17} color="#FFF" /> New Facility
+          <button
+            onClick={openModal}
+            className="gap-[6px] bg-[#0EB981] text-[#FFF] px-4 py-[6px] rounded-md cursor-pointer hover:bg-[#0d9f6e] transition text-[0.875rem] flex items-center font-medium"
+          >
+            <FaPlus size={14} color="#FFF" /> New Facility
           </button>
 
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -264,6 +315,181 @@ export default function HotelFacilitiesTable() {
       {sortedAndFilteredData.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           No facilities found matching your filter criteria.
+        </div>
+      )}
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="fixed inset-0 bg-slate-300/60 bg-opacity-50"
+            onClick={closeModal}
+          ></div>
+          <div
+            className={`${styles.modal} relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto`}
+          >
+            {/* Modal Header */}
+            <div
+              className={`${styles.modalHeader} flex items-center justify-between p-4 border-b`}
+            >
+              <h3 className="text-lg font-semibold text-gray-800">
+                Create New Facility
+              </h3>
+              <button
+                onClick={closeModal}
+                className="text-[#6B7280] hover:text-gray-800 transition-colors"
+              >
+                <MdClose size={24} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Facility Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              {/* Code */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="code"
+                  value={formData.code}
+                  onChange={handleInputChange}
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className={`${styles.formTextarea} resize-none`}
+                />
+              </div>
+
+              {/* Category ID */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category ID
+                </label>
+                <input
+                  type="string"
+                  name="category_id"
+                  value={formData.category_id || ""}
+                  onChange={handleInputChange}
+                  className={styles.formInput}
+                />
+              </div>
+
+              {/* Additional Info */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Additional Information
+                </label>
+                <textarea
+                  name="additional_info"
+                  value={formData.additional_info}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className={`${styles.formTextarea} resize-none`}
+                />
+              </div>
+
+              {/* Checkboxes */}
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="fee_applies"
+                    name="fee_applies"
+                    checked={formData.fee_applies}
+                    onChange={handleInputChange}
+                    className={styles.formCheckbox}
+                  />
+                  <label
+                    htmlFor="fee_applies"
+                    className="ml-2 text-sm text-gray-700"
+                  >
+                    Fee Applies
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="reservation_required"
+                    name="reservation_required"
+                    checked={formData.reservation_required}
+                    onChange={handleInputChange}
+                    className={styles.formCheckbox}
+                  />
+                  <label
+                    htmlFor="reservation_required"
+                    className="ml-2 text-sm text-gray-700"
+                  >
+                    Reservation Required
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="is_active"
+                    name="is_active"
+                    checked={formData.is_active}
+                    onChange={handleInputChange}
+                    className={styles.formCheckbox}
+                  />
+                  <label
+                    htmlFor="is_active"
+                    className="ml-2 text-sm text-gray-700"
+                  >
+                    Active
+                  </label>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-[#E6E7EB]">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-4 py-2 text-[#6B7280] border border-[#E6E7EB] rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#0EB981] text-white rounded-md hover:bg-[#0d9f6e] transition-colors flex items-center gap-2"
+                >
+                  <FaPlus size={14} />
+                  Create Facility
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

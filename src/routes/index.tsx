@@ -42,7 +42,7 @@ import LoyaltyPrograms from "../pages/reviews/loyalty-programs";
 import Theme from "../pages/settings/theme";
 import LostAndFound from "../pages/house-keeping/lost-and-found";
 import AssignTask from "../pages/house-keeping/assign-task";
-import RoomStatus from "../pages/house-keeping/room-status";
+import HouseKeepingTasks from "../pages/house-keeping/house-keeping-tasks";
 
 export interface RouteConfig {
   path: string;
@@ -151,8 +151,8 @@ export const allAppRoutes: RouteConfig[] = [
     roles: ["admin", "staff"],
     children: [
       {
-        path: "rooms-status",
-        element: <RoomStatus />,
+        path: "house-keeping-tasks",
+        element: <HouseKeepingTasks />,
         roles: ["admin", "staff"],
       },
       { path: "assign-tasks", element: <AssignTask />, roles: ["admin"] },
