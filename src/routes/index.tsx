@@ -43,6 +43,7 @@ import Theme from "../pages/settings/theme";
 import LostAndFound from "../pages/house-keeping/lost-and-found";
 import AssignTask from "../pages/house-keeping/assign-task";
 import HouseKeepingTasks from "../pages/house-keeping/house-keeping-tasks";
+import GuestDetail from "../pages/guests/GuestDetail";
 
 export interface RouteConfig {
   path: string;
@@ -53,8 +54,24 @@ export interface RouteConfig {
 
 export const allAppRoutes: RouteConfig[] = [
   { path: "dashboard", element: <Dashboard />, roles: ["admin"] },
-  { path: "guests", element: <Guests />, roles: ["admin", "staff"] },
 
+  {
+    path: "guests",
+    element: <Outlet />,
+    roles: ["admin", "staff"],
+    children: [
+      {
+        path: "",
+        element: <Guests />,
+        roles: ["admin", "staff"],
+      },
+      {
+        path: ":guestId",
+        element: <GuestDetail />,
+        roles: ["admin", "staff"],
+      },
+    ],
+  },
   {
     path: "bookings",
     element: <Outlet />, // Use Outlet instead of null

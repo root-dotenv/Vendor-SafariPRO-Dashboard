@@ -20,6 +20,7 @@ import {
   FaHotel,
   FaStickyNote,
 } from "react-icons/fa";
+import axios from "axios";
 
 // Validation schema
 const bookingSchema = yup.object().shape({
@@ -28,7 +29,7 @@ const bookingSchema = yup.object().shape({
     .required("Full name is required")
     .min(2, "Name must be at least 2 characters"),
   address: yup.string(),
-  phone_number: yup.string(),
+  phone_number: yup.number(),
   email: yup
     .string()
     .required("Email is required")
@@ -44,7 +45,7 @@ const bookingSchema = yup.object().shape({
       }
       return true;
     }),
-  property_item_type: yup.string().required("Room type is required"),
+  property_item_type: yup.string(),
   number_of_booked_property: yup
     .number()
     .required("Number of rooms is required")
@@ -61,14 +62,14 @@ const bookingSchema = yup.object().shape({
 interface BookingFormData {
   full_name: string;
   address: string;
-  phone_number: string;
+  phone_number: number;
   email: string;
   start_date: string;
   end_date: string;
   microservice_item_id: string;
   microservice_item_name: string;
   number_of_booked_property: number;
-  amount_paid: number;
+  amount_paid: string;
   amount_required: string;
   property_item_type: string;
   booking_type: string;
@@ -86,14 +87,14 @@ export default function NewBooking() {
   const initialFormState: BookingFormData = {
     full_name: "",
     address: "",
-    phone_number: "",
+    phone_number: 0,
     email: "",
     start_date: "",
     end_date: "",
     microservice_item_id: hotel.id,
     microservice_item_name: hotel.name,
     number_of_booked_property: 1,
-    amount_paid: 0,
+    amount_paid: "",
     amount_required: "",
     property_item_type: "",
     booking_type: "Physical",
@@ -134,7 +135,7 @@ export default function NewBooking() {
   >({
     mutationFn: async (newBookingData) => {
       const response = await fetch(
-        "http://booking.tradesync.software/api/v1/bookings",
+        "http://booking.tradesync.software/api/v1/bookings/web-create/",
         {
           method: "POST",
           headers: {
@@ -142,11 +143,10 @@ export default function NewBooking() {
           },
           body: JSON.stringify({
             ...newBookingData,
-            initialFormState, // Include initial form state
+            initialFormState,
           }),
         }
       );
-
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}));
         throw new Error(
@@ -284,7 +284,7 @@ export default function NewBooking() {
                   </label>
                   <input
                     {...register("phone_number")}
-                    type="text"
+                    type="number"
                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
                       errors.phone_number ? "border-red-300 bg-red-50" : ""
                     }`}
@@ -441,7 +441,7 @@ export default function NewBooking() {
                   </label>
                   <input
                     {...register("amount_paid", { valueAsNumber: true })}
-                    type="number"
+                    type="string"
                     step="0.01"
                     min="0"
                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
