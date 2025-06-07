@@ -1,19 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { useHotelContext } from "../../contexts/hotelContext";
 import axios from "axios";
-import { FaCheck, FaSort, FaSortUp, FaSortDown, FaPlus } from "react-icons/fa6";
-import { RxCross2 } from "react-icons/rx";
-import styles from "./hotel-facilities.module.css";
-import { BsUiChecksGrid } from "react-icons/bs";
+import {
+  FaPlus,
+  FaBuilding,
+  FaCalendarCheck,
+  FaDollarSign,
+  FaTag,
+  FaInfoCircle,
+  FaListOl,
+  FaQuestionCircle,
+} from "react-icons/fa";
+import { BsUiChecksGrid, BsX } from "react-icons/bs";
 import { MdClose } from "react-icons/md";
 
+// Main Component
 export default function HotelFacilitiesTable() {
   const hotel = useHotelContext();
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [sortConfig, setSortConfig] = useState({
+    key: "name",
+    direction: "asc",
+  });
   const [filterActive, setFilterActive] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
+
+  // Initial State for the form
+  const initialFormState = {
     name: "",
     code: "",
     description: "",
@@ -21,72 +34,63 @@ export default function HotelFacilitiesTable() {
     fee_applies: false,
     reservation_required: false,
     additional_info: "",
-    is_active: false,
-  });
+    is_active: true,
+  };
+  const [formData, setFormData] = useState(initialFormState);
 
-  console.log(`- - - Debugging: useHotelContext Data`);
-  console.log(hotel.facilities);
-
-  //  - - - Extract facility IDs from the hotel context
   const facilityIds = hotel.facilities || [];
 
-  // - - - useQueries to fetch data for multiple facility IDs
+  // Fetching data
   const facilityQueries = useQueries({
     queries: facilityIds.map((facilityId) => ({
-      queryKey: ["facility", facilityId], // - - - Unique query key for each facility
+      queryKey: ["facility", facilityId],
       queryFn: async () => {
         const response = await axios.get(
           `https://hotel.tradesync.software/api/v1/facilities/${facilityId}/`
         );
         return response.data;
       },
-      // - - - other useQueries options goes here
     })),
   });
 
   const isLoading = facilityQueries.some((query) => query.isLoading);
   const isError = facilityQueries.some((query) => query.isError);
-  const errors = facilityQueries
-    .filter((query) => query.isError)
-    .map((query) => query.error);
 
-  // - - -Get all successful data
-  const facilitiesData = facilityQueries
-    .filter((query) => query.isSuccess)
-    .map((query) => query.data);
+  // Memoized sorting and filtering logic
+  const sortedAndFilteredData = useMemo(() => {
+    const facilitiesData = facilityQueries
+      .filter((query) => query.isSuccess)
+      .map((query) => query.data);
 
+    let filtered = facilitiesData;
+    if (filterActive === "active") {
+      filtered = facilitiesData.filter((f) => f.is_active);
+    } else if (filterActive === "inactive") {
+      filtered = facilitiesData.filter((f) => !f.is_active);
+    }
+
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        const key = sortConfig.key;
+        if (a[key] < b[key]) return sortConfig.direction === "asc" ? -1 : 1;
+        if (a[key] > b[key]) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return filtered;
+  }, [facilityQueries, sortConfig, filterActive]);
+
+  // Handlers
   const handleSort = (key) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const getSortIcon = (columnKey) => {
-    if (sortConfig.key !== columnKey) {
-      return <FaSort className="opacity-50" />;
-    }
-    return sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />;
-  };
-
-  // Modal handlers
-  const openModal = () => {
-    setIsModalOpen(true);
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setFormData({
-      name: "",
-      code: "",
-      description: "",
-      category_id: null,
-      fee_applies: false,
-      reservation_required: false,
-      additional_info: "",
-      is_active: false,
-    });
+    setFormData(initialFormState);
   };
 
   const handleInputChange = (e) => {
@@ -97,397 +101,314 @@ export default function HotelFacilitiesTable() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      // Add your API call here to create the facility
-      console.log("Submitting facility:", formData);
-      // await axios.post('your-api-endpoint', formData);
-      closeModal();
-    } catch (error) {
-      console.error("Error creating facility:", error);
-    }
+    console.log("Submitting facility:", formData);
+    // Add your mutation logic here
+    closeModal();
   };
 
-  const sortedAndFilteredData = React.useMemo(() => {
-    let filtered = facilitiesData;
-
-    // - - - Apply filter
-    if (filterActive === "active") {
-      filtered = facilitiesData.filter((f) => f.is_active);
-    } else if (filterActive === "inactive") {
-      filtered = facilitiesData.filter((f) => !f.is_active);
-    }
-
-    //  - - - Apply sort
-    if (sortConfig.key) {
-      filtered = [...filtered].sort((a, b) => {
-        let aVal = sortConfig.key ? a[sortConfig.key] : null;
-        let bVal = sortConfig.key ? b[sortConfig.key] : null;
-
-        if (typeof aVal === "boolean") {
-          aVal = aVal ? 1 : 0;
-          bVal = bVal ? 1 : 0;
-        }
-
-        if (typeof aVal === "string") {
-          aVal = aVal.toLowerCase();
-          bVal = bVal.toLowerCase();
-        }
-
-        if (sortConfig.direction === "asc") {
-          return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-        } else {
-          return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
-        }
-      });
-    }
-
-    return filtered;
-  }, [facilitiesData, sortConfig, filterActive]);
-
-  if (isLoading) {
-    console.log("Loading facilities...");
-    return <p className={styles.loading}>Loading facilities...</p>;
-  }
-
-  if (isError) {
-    console.error("Error fetching facilities:", errors);
+  if (isLoading)
     return (
-      <div className={styles.errorContainer}>
-        <p>Error loading facilities:</p>
-        <ul>
-          {errors.map((err, index) => (
-            <li key={index}>{err.message}</li>
-          ))}
-        </ul>
-      </div>
+      <div className="p-8 text-center text-gray-500">Loading Facilities...</div>
     );
-  }
-
-  console.log(`- - - Facilities Response Object`, facilitiesData);
+  if (isError)
+    return (
+      <div className="p-8 text-center text-red-500">Error loading data.</div>
+    );
 
   return (
-    <div className="p-5">
-      <div className="flex justify-between items-center mb-4">
-        <h2
-          className={`font-semibold text-[1.5rem] flex items-center gap-3 ml-[0.5rem]`}
-        >
-          <BsUiChecksGrid size={22} /> Hotel Facilities
-        </h2>
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <header className="mb-6">
+          <h2 className="text-3xl font-bold text-blue-900 flex items-center gap-3">
+            <BsUiChecksGrid /> Hotel Facilities
+          </h2>
+          <p className="text-gray-600 mt-1">
+            Manage all facilities available at the hotel.
+          </p>
+        </header>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={openModal}
-            className="gap-[6px] bg-[#0EB981] text-[#FFF] px-4 py-[6px] rounded-md cursor-pointer hover:bg-[#0d9f6e] transition text-[0.875rem] flex items-center font-medium"
-          >
-            <FaPlus size={14} color="#FFF" /> New Facility
-          </button>
-
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            Filter:
+        {/* Controls Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-white rounded-lg shadow-sm mb-6">
+          <div className="flex items-center gap-4">
             <select
               value={filterActive}
               onChange={(e) => setFilterActive(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option className="text-red-500" value="all">
-                All Facilities
-              </option>
-              <option className="text-red-500" value="active">
-                Active Only
-              </option>
-              <option className="text-red-500" value="inactive">
-                Inactive Only
-              </option>
+              <option value="all">All Facilities</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
             </select>
-          </label>
-
-          <div className="text-sm text-gray-500">
-            Showing {sortedAndFilteredData.length} of {facilitiesData.length}
-            facilities
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleSort("name")}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-800 hover:bg-gray-100"
+              >
+                Sort by Name
+              </button>
+            </div>
           </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors w-full sm:w-auto"
+          >
+            <FaPlus /> New Facility
+          </button>
         </div>
-      </div>
 
-      <div className={styles.tableContainer}>
-        <table className={styles.facilitiesTable}>
-          <thead>
-            <tr>
-              <th>
-                <button
-                  onClick={() => handleSort("code")}
-                  className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-                >
-                  Code {getSortIcon("code")}
-                </button>
-              </th>
-              <th>
-                <button
-                  onClick={() => handleSort("name")}
-                  className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-                >
-                  Facility Name {getSortIcon("name")}
-                </button>
-              </th>
-              <th>Description</th>
-              <th>
-                <button
-                  onClick={() => handleSort("is_active")}
-                  className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-                >
-                  Status {getSortIcon("is_active")}
-                </button>
-              </th>
-              <th>
-                <button
-                  onClick={() => handleSort("reservation_required")}
-                  className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-                >
-                  Reservation {getSortIcon("reservation_required")}
-                </button>
-              </th>
-              <th>
-                <button
-                  onClick={() => handleSort("fee_applies")}
-                  className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-                >
-                  Fee Applies {getSortIcon("fee_applies")}
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+        {/* Grid of Facility Cards */}
+        {sortedAndFilteredData.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedAndFilteredData.map((facility) => (
-              <tr key={facility.id}>
-                <td>
-                  <span className={styles.tableCode}>{facility.code}</span>
-                </td>
-                <td>
-                  <div className={styles.tableName}>
-                    <span>{facility.name}</span>
+              <div
+                key={facility.id}
+                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col"
+              >
+                <div
+                  className={`p-4 rounded-t-lg ${
+                    facility.is_active
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600"
+                      : "bg-gradient-to-r from-gray-400 to-gray-500"
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      <FaBuilding /> {facility.name}
+                    </h3>
+                    <span
+                      className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                        facility.is_active
+                          ? "bg-white text-emerald-700"
+                          : "bg-white text-gray-700"
+                      }`}
+                    >
+                      {facility.is_active ? "Active" : "Inactive"}
+                    </span>
                   </div>
-                </td>
-                <td>
-                  <div className={styles.tableDescription}>
-                    {facility.description}
-                  </div>
-                </td>
-                <td>
-                  <div
-                    className={`${styles.tableStatus} ${
-                      facility.is_active ? styles.active : styles.inactive
+                  <p
+                    className={`text-sm font-mono mt-1 ${
+                      facility.is_active ? "text-blue-200" : "text-gray-200"
                     }`}
                   >
-                    {facility.is_active ? (
-                      <FaCheck className={styles.activeIcon} />
+                    {facility.code}
+                  </p>
+                </div>
+                <div className="p-4 flex-grow">
+                  <p className="text-gray-700 text-sm">
+                    {facility.description || "No description provided."}
+                  </p>
+                </div>
+                <div className="p-4 border-t border-gray-200 space-y-2 text-sm">
+                  <p
+                    className={`flex items-center gap-2 font-medium ${
+                      facility.reservation_required
+                        ? "text-amber-700"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {facility.reservation_required ? (
+                      <FaCalendarCheck />
                     ) : (
-                      <RxCross2 className={styles.inactiveIcon} />
+                      <BsX className="text-red-500" />
                     )}
-                  </div>
-                </td>
-                <td>
-                  <span
-                    className={`${styles.tableBadge} ${
-                      facility.reservation_required ? styles.yes : styles.no
-                    }`}
-                  >
+                    Reservation{" "}
                     {facility.reservation_required
                       ? "Required"
                       : "Not Required"}
-                  </span>
-                </td>
-                <td>
-                  <span
-                    className={`${styles.tableBadge} ${
-                      facility.fee_applies ? styles.yes : styles.no
+                  </p>
+                  <p
+                    className={`flex items-center gap-2 font-medium ${
+                      facility.fee_applies ? "text-amber-700" : "text-gray-500"
                     }`}
                   >
-                    {facility.fee_applies ? "Yes" : "No"}
-                  </span>
-                </td>
-              </tr>
+                    {facility.fee_applies ? (
+                      <FaDollarSign />
+                    ) : (
+                      <BsX className="text-red-500" />
+                    )}
+                    Fee {facility.fee_applies ? "Applies" : "Does Not Apply"}
+                  </p>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        ) : (
+          <div className="text-center py-16 px-6 bg-white rounded-lg shadow-sm">
+            <h3 className="text-xl font-semibold text-gray-800">
+              No Facilities Found
+            </h3>
+            <p className="mt-1 text-gray-500">
+              Try adjusting your filters or add a new facility.
+            </p>
+          </div>
+        )}
       </div>
 
-      {sortedAndFilteredData.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No facilities found matching your filter criteria.
-        </div>
-      )}
-
-      {/* Modal */}
+      {/* --- Create New Facility Modal --- */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="fixed inset-0 bg-slate-300/60 bg-opacity-50"
-            onClick={closeModal}
-          ></div>
-          <div
-            className={`${styles.modal} relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto`}
-          >
-            {/* Modal Header */}
-            <div
-              className={`${styles.modalHeader} flex items-center justify-between p-4 border-b`}
-            >
-              <h3 className="text-lg font-semibold text-gray-800">
-                Create New Facility
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <header className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <FaPlus /> Create New Facility
               </h3>
               <button
                 onClick={closeModal}
-                className="text-[#6B7280] hover:text-gray-800 transition-colors"
+                className="p-1 hover:bg-white/20 rounded-full"
               >
-                <MdClose size={24} />
+                <MdClose size={22} />
               </button>
-            </div>
+            </header>
 
-            {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              {/* Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Facility Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                  required
-                />
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 space-y-5 overflow-y-auto"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="flex items-center text-sm font-medium text-blue-900 mb-1">
+                    <FaTag className="mr-2 text-purple-500" />
+                    Name*
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center text-sm font-medium text-blue-900 mb-1">
+                    <FaTag className="mr-2 text-purple-500" />
+                    Code*
+                  </label>
+                  <input
+                    type="text"
+                    name="code"
+                    value={formData.code}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
               </div>
 
-              {/* Code */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Code <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="code"
-                  value={formData.code}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                  required
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="flex items-center text-sm font-medium text-blue-900 mb-1">
+                  <FaInfoCircle className="mr-2 text-purple-500" />
                   Description
                 </label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  rows={4}
-                  className={`${styles.formTextarea} resize-none`}
-                />
-              </div>
-
-              {/* Category ID */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category ID
-                </label>
-                <input
-                  type="string"
-                  name="category_id"
-                  value={formData.category_id || ""}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                />
-              </div>
-
-              {/* Additional Info */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Additional Information
-                </label>
-                <textarea
-                  name="additional_info"
-                  value={formData.additional_info}
-                  onChange={handleInputChange}
                   rows={3}
-                  className={`${styles.formTextarea} resize-none`}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 resize-none"
                 />
               </div>
 
-              {/* Checkboxes */}
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="fee_applies"
-                    name="fee_applies"
-                    checked={formData.fee_applies}
-                    onChange={handleInputChange}
-                    className={styles.formCheckbox}
-                  />
-                  <label
-                    htmlFor="fee_applies"
-                    className="ml-2 text-sm text-gray-700"
-                  >
-                    Fee Applies
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="flex items-center text-sm font-medium text-blue-900 mb-1">
+                    <FaListOl className="mr-2 text-purple-500" />
+                    Category ID
                   </label>
+                  <input
+                    type="text"
+                    name="category_id"
+                    value={formData.category_id || ""}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500"
+                  />
                 </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="reservation_required"
-                    name="reservation_required"
-                    checked={formData.reservation_required}
-                    onChange={handleInputChange}
-                    className={styles.formCheckbox}
-                  />
-                  <label
-                    htmlFor="reservation_required"
-                    className="ml-2 text-sm text-gray-700"
-                  >
-                    Reservation Required
+                <div>
+                  <label className="flex items-center text-sm font-medium text-blue-900 mb-1">
+                    <FaQuestionCircle className="mr-2 text-purple-500" />
+                    Additional Info
                   </label>
-                </div>
-
-                <div className="flex items-center">
                   <input
-                    type="checkbox"
-                    id="is_active"
-                    name="is_active"
-                    checked={formData.is_active}
+                    type="text"
+                    name="additional_info"
+                    value={formData.additional_info}
                     onChange={handleInputChange}
-                    className={styles.formCheckbox}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500"
                   />
-                  <label
-                    htmlFor="is_active"
-                    className="ml-2 text-sm text-gray-700"
-                  >
-                    Active
-                  </label>
                 </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-[#E6E7EB]">
+              <div className="pt-4 border-t border-dashed">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_active"
+                      name="is_active"
+                      checked={formData.is_active}
+                      onChange={handleInputChange}
+                      className="h-5 w-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <label
+                      htmlFor="is_active"
+                      className="ml-2 font-medium text-gray-800"
+                    >
+                      Active
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="fee_applies"
+                      name="fee_applies"
+                      checked={formData.fee_applies}
+                      onChange={handleInputChange}
+                      className="h-5 w-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <label
+                      htmlFor="fee_applies"
+                      className="ml-2 font-medium text-gray-800"
+                    >
+                      Fee Applies
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="reservation_required"
+                      name="reservation_required"
+                      checked={formData.reservation_required}
+                      onChange={handleInputChange}
+                      className="h-5 w-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <label
+                      htmlFor="reservation_required"
+                      className="ml-2 font-medium text-gray-800"
+                    >
+                      Reservation Required
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <footer className="flex justify-end gap-4 pt-5">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 text-[#6B7280] border border-[#E6E7EB] rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 font-semibold bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#0EB981] text-white rounded-md hover:bg-[#0d9f6e] transition-colors flex items-center gap-2"
+                  className="px-5 py-2 font-semibold bg-gradient-to-b from-blue-500 to-purple-500 text-white rounded-lg shadow-lg hover:opacity-90"
                 >
-                  <FaPlus size={14} />
                   Create Facility
                 </button>
-              </div>
+              </footer>
             </form>
           </div>
         </div>

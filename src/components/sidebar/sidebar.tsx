@@ -39,7 +39,7 @@ const menuConfig: MenuItemConfig[] = [
     to: "/dashboard",
     icon: <IoGridOutline size={20} />,
     text: "Dashboard",
-    roles: ["admin"],
+    roles: ["admin", "staff"],
   },
   {
     to: "/guests",
@@ -128,7 +128,7 @@ const menuConfig: MenuItemConfig[] = [
       //   roles: ["admin"],
       // },
       {
-        to: "/my-hotel/fun-things-to-do",
+        to: "/calendar/hotel-events",
         text: "Fun Things To Do",
         roles: ["admin"],
       },
@@ -139,7 +139,7 @@ const menuConfig: MenuItemConfig[] = [
         roles: ["admin"],
       },
       { to: "/my-hotel/map-location", text: "Map Location", roles: ["admin"] },
-      { to: "/my-hotel/about-hotel", text: "About Hotel", roles: ["admin"] },
+      // { to: "/my-hotel/about-hotel", text: "About Hotel", roles: ["admin"] },
     ],
   },
   {
@@ -225,7 +225,11 @@ const menuConfig: MenuItemConfig[] = [
         text: "Service Management",
         roles: ["admin"],
       }, // Admin only
-      { to: "/staffs/services", text: "Services", roles: ["admin", "staff"] },
+      {
+        to: "/staffs/services",
+        text: "Departments",
+        roles: ["admin", "staff"],
+      },
     ],
   },
   {

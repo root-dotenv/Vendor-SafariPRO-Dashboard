@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const response = await axiosClient.get<User[]>("/users"); // response is an array of users object
+      const response = await axiosClient.get<User[]>("/staffs"); // response is an array of users object
 
       console.log(`- - - Debugging Returned Response From AxiosClient - - -`);
       console.log(response); //  - - - This returned an array of users objects

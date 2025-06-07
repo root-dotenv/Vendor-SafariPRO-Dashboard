@@ -1,25 +1,143 @@
 {
-  "users": [
+  "staffs": [
     {
-      "id": "admin-1",
-      "email": "admin@gmail.com",
-      "username": "rootadmin",
-      "password": "qwerty@123",
-      "role": "admin"
+      "id": "user-001-admin",
+      "fullname": "Admin User",
+      "role": "admin",
+      "department": "Management",
+      "username": "rootdotenv",
+      "password": "asdf123",
+      "email": "rootdotenv@admin.com"
     },
     {
-      "id": "staff-1",
-      "email": "staff1@gmail.com",
-      "username": "staff-one",
-      "password": "staff@123",
+      "id": "user-002-staff",
+      "fullname": "John Smith",
+      "username": "johnsmith",
+      "role": "staff",
+      "department": "House Keeping",
+      "email": "johnsmith@hotel.com",
+      "password": "asdf123"
+    },
+    {
+      "id": "user-003-staff",
+      "fullname": "Jane Smith",
+      "username": "janesmith",
+      "role": "staff",
+      "department": "Front Office",
+      "email": "janesmith@hotel.com",
+      "password": "asdf123"
+    },
+    {
+      "id": "user-004-staff",
+      "fullname": "Peter Jones",
+      "username": "peterjones",
+      "role": "staff",
+      "department": "Food & Beverage",
+      "email": "peterjones@hotel.com",
+      "password": "asdf123"
+    },
+    {
+      "id": "9d15",
+      "fullname": "root dotenv",
+      "username": "rootdotenv",
+      "email": "rootdotenv@gmail.com",
+      "password": "asdf123",
+      "department": "Human Resources",
       "role": "staff"
     },
     {
-      "id": "staff-2",
-      "email": "staff2@gmail.com",
-      "username": "staff-two",
-      "password": "staff@123",
+      "id": "f108",
+      "fullname": "Lester Crest",
+      "username": "lestercrest",
+      "email": "lestercrest@hotel.com",
+      "password": "asdf123",
+      "department": "House Keeping",
       "role": "staff"
+    },
+    {
+      "id": "468e",
+      "fullname": "Franklin Clinton",
+      "username": "Frankly",
+      "email": "franklynclinton@hotel.com",
+      "password": "asdf123",
+      "department": "House Keeping",
+      "role": "staff"
+    },
+    {
+      "id": "5f95",
+      "fullname": "Trevor Philips",
+      "username": "trevorphilips",
+      "email": "trevorphilips@hotel.com",
+      "password": "asdf123",
+      "department": "Sales & Marketing",
+      "role": "staff"
+    },
+    {
+      "id": "475a",
+      "fullname": "BillieJean",
+      "username": "billiejean",
+      "email": "billiejean@gmail.com",
+      "password": "asddf123",
+      "department": "Maintenance",
+      "role": "staff"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-001",
+      "task_title": "Deep Clean Presidential Suite",
+      "priority": 9,
+      "assigned_by": "Admin User",
+      "assigned_to_id": "user-002-staff",
+      "assigned_to_name": "John Doe",
+      "department": "House Keeping",
+      "status": "Scheduled",
+      "task_notes": "Guest checking in at 4 PM. Ensure all surfaces are sanitized and amenities are restocked.",
+      "scheduled_date": "2025-06-08",
+      "scheduled_time": "11:00",
+      "room_place": "Room 501 - Presidential Suite"
+    },
+    {
+      "id": "task-002",
+      "task_title": "Test Task Title",
+      "priority": 2,
+      "assigned_by": "Admin User",
+      "assigned_to_id": "user-003-staff",
+      "assigned_to_name": "Jane Smith",
+      "department": "Front Office",
+      "status": "Scheduled",
+      "task_notes": "Task is Scheduled",
+      "scheduled_date": "2025-06-07",
+      "scheduled_time": "10:00",
+      "room_place": "Lobby"
+    },
+    {
+      "id": "f439",
+      "task_title": "Dust-Off",
+      "priority": 5,
+      "assigned_to_id": "user-002-staff",
+      "department": "House Keeping",
+      "status": "Completed",
+      "task_notes": "Go with a vacuum cleaner",
+      "scheduled_date": "2025-06-20",
+      "scheduled_time": "13:45",
+      "room_place": "MH370",
+      "assigned_by": "Admin",
+      "assigned_to_name": "John Doe"
+    },
+    {
+      "id": "58d3",
+      "task_title": "Window Clean",
+      "priority": 2,
+      "assigned_to_id": "user-004-staff",
+      "department": "Food & Beverage",
+      "status": "Needs Attention",
+      "task_notes": "This task has no further descriptive notes",
+      "scheduled_date": "2025-06-10",
+      "scheduled_time": "16:20",
+      "room_place": "787-A1",
+      "assigned_by": "Admin User",
+      "assigned_to_name": "Peter Jones"
     }
   ],
   "services": [
@@ -50,6 +168,120 @@
       "amendment": "No Ammendment Policy Needed",
       "description": "SERCICE DESCRIPTION",
       "name": "TEST ADD SERVICE"
+    }
+  ],
+  "lost_items": [
+    {
+      "id": "1",
+      "type": "Electronics",
+      "item_name": "iPhone 14 Pro",
+      "description": "Black iPhone with cracked screen protector",
+      "location_found": "Room 205",
+      "date_found": "2024-06-05",
+      "found_by": "Maria Santos",
+      "status": "unclaimed",
+      "guest_name": "",
+      "guest_contact": "",
+      "guest_email": "",
+      "notes": "Found under the bed during housekeeping"
+    },
+    {
+      "id": "3",
+      "type": "Clothing",
+      "item_name": "Designer Sunglasses",
+      "description": "Ray-Ban Aviators with prescription lenses",
+      "location_found": "Pool Area",
+      "date_found": "2024-06-03",
+      "found_by": "Sarah Wilson",
+      "status": "unclaimed",
+      "guest_name": "",
+      "guest_contact": "",
+      "guest_email": "",
+      "notes": "Left on poolside table"
+    },
+    {
+      "id": "5",
+      "type": "Electronics",
+      "item_name": "Laptop Charger",
+      "description": "MacBook Pro charger with USB-C connector",
+      "location_found": "Conference Room B",
+      "date_found": "2024-06-01",
+      "found_by": "IT Support",
+      "status": "unclaimed",
+      "guest_name": "",
+      "guest_contact": "",
+      "guest_email": "",
+      "notes": "Found after business meeting"
+    },
+    {
+      "id": "10fb",
+      "type": "Documents",
+      "item_name": "CSEE Certificates and Other",
+      "description": "CSEE Certificate ",
+      "location_found": "Balcon",
+      "date_found": "2025-06-13",
+      "found_by": "John Doe",
+      "notes": "Believe it or not, it is Division IV",
+      "guest_name": "Robert",
+      "guest_contact": "07857882",
+      "guest_email": "robert norman",
+      "status": "claimed"
+    }
+  ],
+  "departments": [
+    {
+      "id": "401afe12-ec86-4b9c-a3b1-a511796dbc24",
+      "is_active": true,
+      "name": "Front Office",
+      "code": "DEPT-0",
+      "description": "Manages guest check-in/check-out and front desk operations.",
+      "hod_id": "user-004-staff",
+      "hod_name": "Peter Jones"
+    },
+    {
+      "id": "d7e9b7d5-8f07-46ae-b714-0f7d5b63354c",
+      "is_active": true,
+      "name": "Housekeeping",
+      "code": "DEPT-1",
+      "description": "Responsible for cleanliness and maintenance of guest rooms and public areas.",
+      "hod_id": "f108",
+      "hod_name": "Lester Crest"
+    },
+    {
+      "id": "ce49c3f2-168a-4ef3-bef8-84083382cc33",
+      "is_active": true,
+      "name": "Food & Beverage",
+      "code": "DEPT-2",
+      "description": "Oversees restaurant, bar, and catering services.",
+      "hod_id": "user-004-staff",
+      "hod_name": "Peter Jones"
+    },
+    {
+      "id": "be514481-265c-4230-ad02-2706ba5edf18",
+      "is_active": true,
+      "name": "Maintenance",
+      "code": "DEPT-3",
+      "description": "Handles property repairs, maintenance, and engineering services.",
+      "hod_id": null,
+      "hod_name": null
+    },
+    {
+      "id": "560a0d26-48ef-4f7e-9ee2-67feed66eccf",
+      "name": "Sales & Marketing",
+      "is_active": true,
+      "code": "DEPT-4",
+      "description": "Manages promotions, sales, and marketing activities.",
+      "hod_id": null,
+      "hod_name": null
+    },
+    {
+      "id": "9079248d-cdcf-4eb6-88db-2c539d723cf4",
+      "is_active": true,
+      "name": "Human Resources",
+      "code": "DEPT-5",
+      "description": "Handles staff recruitment, training, and HR matters.",
+      "hod_id": null,
+      "hod_name": null
     }
   ]
 }

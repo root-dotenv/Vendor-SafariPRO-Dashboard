@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-
 import {
   FaBed,
   FaMoneyBillWave,
@@ -14,7 +13,6 @@ import {
   FaConciergeBell,
   FaCoffee,
 } from "react-icons/fa";
-
 import {
   PieChart,
   Pie,
@@ -28,64 +26,48 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
-
 import { useHotelContext } from "../../contexts/hotelContext";
 
 // --- TYPES ---
-
 interface FacilityDetail {
   id: string;
-
   name: string;
-
   code: string;
-
   description: string;
-
   icon: string | null;
 }
 
 // --- HELPER COMPONENTS ---
-
 const DashboardStatCard: React.FC<{
   icon: React.ReactNode;
-
   title: string;
-
   children: React.ReactNode;
 }> = ({ icon, title, children }) => (
   <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
     <div className="flex items-center gap-4 mb-4">
       <div className="bg-blue-100 p-3 rounded-full">{icon}</div>
-
       <h3 className="text-lg font-bold text-gray-700">{title}</h3>
     </div>
-
     <div className="space-y-2 text-sm">{children}</div>
   </div>
 );
 
 const ChartWrapper: React.FC<{ title: string; children: React.ReactNode }> = ({
   title,
-
   children,
 }) => (
   <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 h-full">
     <h3 className="text-lg font-bold text-gray-800 mb-4">{title}</h3>
-
     <div className="h-80">{children}</div>
   </div>
 );
 
 // --- MAIN DASHBOARD COMPONENT ---
-
 const Dashboard = () => {
   const hotel = useHotelContext();
-
   const [facilitiesDetails, setFacilitiesDetails] = useState<FacilityDetail[]>(
     []
   );
-
   const API_BASE_URL = "https://hotel.tradesync.software/api/v1";
 
   useEffect(() => {
@@ -95,141 +77,101 @@ const Dashboard = () => {
           const promises = hotel.facilities.map((id) =>
             fetch(`${API_BASE_URL}/facilities/${id}`).then((res) => {
               if (!res.ok) throw new Error(`Facility fetch failed for ${id}`);
-
               return res.json();
             })
           );
-
           const results = await Promise.all(promises);
-
           setFacilitiesDetails(results);
         } catch (error) {
           console.error("Failed to fetch facilities:", error);
-
           setFacilitiesDetails([]);
         }
       } else {
         setFacilitiesDetails([]);
       }
     };
-
     fetchFacilities();
   }, [hotel]);
 
-  // --- ENHANCED CHART COLORS & DATA ---
-
+  // --- CHART COLORS & DATA ---
   const COLORS = {
-    green: "#22c55e", // emerald-500
-
-    red: "#ef4444", // red-500
-
-    amber: "#f59e0b", // amber-500
-
-    blue: "#3b82f6", // blue-500
-
-    purple: "#8b5cf6", // purple-500
+    green: "#22c55e",
+    red: "#ef4444",
+    amber: "#f59e0b",
+    blue: "#3b82f6",
+    purple: "#8b5cf6",
   };
-
   const roomStatusData = [
     {
       name: "Available",
-
       value: hotel.availability_stats?.status_counts?.Available || 0,
-
       color: COLORS.green,
     },
-
     {
       name: "Booked",
-
       value: hotel.availability_stats?.status_counts?.Booked || 0,
-
       color: COLORS.red,
     },
-
     {
       name: "Maintenance",
-
       value: hotel.availability_stats?.status_counts?.Maintenance || 0,
-
       color: COLORS.amber,
     },
   ];
-
   const roomTypeData =
     hotel.room_type?.map((room) => ({
       name: room.name,
-
       available: room.availability?.available_rooms || 0,
-
       booked: room.availability?.booked_rooms || 0,
-
       maintenance: room.availability?.maintenance_rooms || 0,
     })) || [];
-
   const pricingData = [
     { name: "Min Price", price: hotel.pricing_data?.min || 0 },
-
     { name: "Avg Price", price: hotel.pricing_data?.avg || 0 },
-
     { name: "Max Price", price: hotel.pricing_data?.max || 0 },
   ];
 
-  // Helper to render themed icons for facilities
-
   const getFacilityIcon = (facilityName: string) => {
     const name = facilityName.toLowerCase();
-
     const iconClass = "w-5 h-5";
-
     if (name.includes("wifi"))
       return <FaWifi className={`${iconClass} text-blue-500`} />;
-
     if (name.includes("pool"))
       return <FaSwimmingPool className={`${iconClass} text-cyan-500`} />;
-
     if (name.includes("restaurant"))
       return <FaUtensils className={`${iconClass} text-orange-500`} />;
-
     if (name.includes("parking"))
       return <FaParking className={`${iconClass} text-slate-600`} />;
-
-    if (name.includes("gym") || name.includes("fitness"))
+    if (name.includes("gym"))
       return <FaDumbbell className={`${iconClass} text-red-500`} />;
-
     if (name.includes("spa"))
       return <FaSpa className={`${iconClass} text-pink-500`} />;
-
-    if (name.includes("service") || name.includes("concierge"))
+    if (name.includes("concierge"))
       return <FaConciergeBell className={`${iconClass} text-purple-500`} />;
-
-    if (name.includes("coffee") || name.includes("breakfast"))
+    if (name.includes("coffee"))
       return <FaCoffee className={`${iconClass} text-amber-700`} />;
-
     return <FaStar className={`${iconClass} text-gray-400`} />;
   };
 
-  const RADIAN = Math.PI / 180;
+  // --- New helper function for occupancy bar color ---
+  const getOccupancyColor = (percentage) => {
+    if (percentage > 85) return "bg-red-500";
+    if (percentage > 60) return "bg-amber-500";
+    return "bg-emerald-500";
+  };
 
+  const RADIAN = Math.PI / 180;
   const renderCustomizedLabel = ({
     cx,
-
     cy,
-
     midAngle,
-
     innerRadius,
-
     outerRadius,
-
     percent,
   }) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
-
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
     return (
       <text
         x={x}
@@ -248,14 +190,12 @@ const Dashboard = () => {
     <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
       <header className="flex items-center gap-3 mb-8">
         <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-
         <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           Hotel Dashboard
         </h1>
       </header>
 
       {/* Overview Cards */}
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <DashboardStatCard
           icon={<FaBed className="text-blue-500" />}
@@ -267,14 +207,12 @@ const Dashboard = () => {
               {hotel.summary_counts?.rooms || 0}
             </strong>
           </p>
-
           <p className="flex justify-between">
             Available:{" "}
             <strong className="text-emerald-600">
               {hotel.availability_stats?.status_counts?.Available || 0}
             </strong>
           </p>
-
           <p className="flex justify-between">
             Occupancy:{" "}
             <strong className="text-blue-600">
@@ -282,7 +220,6 @@ const Dashboard = () => {
             </strong>
           </p>
         </DashboardStatCard>
-
         <DashboardStatCard
           icon={<FaMoneyBillWave className="text-emerald-500" />}
           title="Revenue & Pricing"
@@ -293,14 +230,12 @@ const Dashboard = () => {
               ${hotel.average_room_price?.toFixed(2) || "0.00"}
             </strong>
           </p>
-
           <p className="flex justify-between">
             Min Price:{" "}
             <strong className="text-gray-800">
               ${hotel.pricing_data?.min?.toFixed(2) || "0.00"}
             </strong>
           </p>
-
           <p className="flex justify-between">
             Max Price:{" "}
             <strong className="text-gray-800">
@@ -308,7 +243,6 @@ const Dashboard = () => {
             </strong>
           </p>
         </DashboardStatCard>
-
         <DashboardStatCard
           icon={<FaStar className="text-amber-500" />}
           title="Ratings & Reviews"
@@ -319,12 +253,10 @@ const Dashboard = () => {
               {hotel.average_rating || 0}/5
             </strong>
           </p>
-
           <p className="flex justify-between">
             Total Reviews:{" "}
             <strong className="text-gray-800">{hotel.review_count || 0}</strong>
           </p>
-
           <p className="flex justify-between items-center">
             Hotel Stars:{" "}
             <strong className="flex items-center gap-1 text-amber-500">
@@ -332,7 +264,6 @@ const Dashboard = () => {
             </strong>
           </p>
         </DashboardStatCard>
-
         <DashboardStatCard
           icon={<FaMapMarkerAlt className="text-purple-500" />}
           title="Property Info"
@@ -343,14 +274,12 @@ const Dashboard = () => {
               {hotel.number_floors || 0}
             </strong>
           </p>
-
           <p className="flex justify-between">
             Restaurants:{" "}
             <strong className="text-gray-800">
               {hotel.number_restaurants || 0}
             </strong>
           </p>
-
           <p className="flex justify-between">
             Year Built:{" "}
             <strong className="text-gray-800">
@@ -361,7 +290,6 @@ const Dashboard = () => {
       </div>
 
       {/* Charts Row */}
-
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
         <div className="lg:col-span-2">
           <ChartWrapper title="Room Status">
@@ -386,25 +314,19 @@ const Dashboard = () => {
                     />
                   ))}
                 </Pie>
-
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.8)",
-
                     backdropFilter: "blur(5px)",
-
                     borderRadius: "12px",
-
                     borderColor: "#e5e7eb",
                   }}
                 />
-
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </ChartWrapper>
         </div>
-
         <div className="lg:col-span-3">
           <ChartWrapper title="Room Type Availability">
             <ResponsiveContainer width="100%" height="100%">
@@ -413,39 +335,29 @@ const Dashboard = () => {
                 margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-
                 <YAxis />
-
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.8)",
-
                     backdropFilter: "blur(5px)",
-
                     borderRadius: "12px",
-
                     borderColor: "#e5e7eb",
                   }}
                 />
-
                 <Legend />
-
                 <Bar
                   dataKey="available"
                   stackId="a"
                   fill={COLORS.green}
                   name="Available"
                 />
-
                 <Bar
                   dataKey="booked"
                   stackId="a"
                   fill={COLORS.red}
                   name="Booked"
                 />
-
                 <Bar
                   dataKey="maintenance"
                   stackId="a"
@@ -459,7 +371,6 @@ const Dashboard = () => {
       </div>
 
       {/* Second Chart and Info Row */}
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <ChartWrapper title="Pricing Range">
           <ResponsiveContainer width="100%" height="100%">
@@ -470,7 +381,6 @@ const Dashboard = () => {
               <defs>
                 <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={COLORS.blue} stopOpacity={0.8} />
-
                   <stop
                     offset="95%"
                     stopColor={COLORS.purple}
@@ -478,36 +388,26 @@ const Dashboard = () => {
                   />
                 </linearGradient>
               </defs>
-
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-
               <XAxis dataKey="name" />
-
               <YAxis tickFormatter={(value) => `$${value}`} />
-
               <Tooltip
                 formatter={(value) => `$${value}`}
                 contentStyle={{
                   backgroundColor: "rgba(255, 255, 255, 0.8)",
-
                   backdropFilter: "blur(5px)",
-
                   borderRadius: "12px",
-
                   borderColor: "#e5e7eb",
                 }}
               />
-
               <Bar dataKey="price" fill="url(#colorPrice)" name="Price ($)" />
             </BarChart>
           </ResponsiveContainer>
         </ChartWrapper>
-
         <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
           <h3 className="text-lg font-bold text-gray-800 mb-4">
             Top Facilities
           </h3>
-
           <div className="flex flex-wrap gap-3">
             {facilitiesDetails.slice(0, 8).map((facility) => (
               <span
@@ -515,15 +415,12 @@ const Dashboard = () => {
                 className="flex items-center gap-2 bg-slate-100 text-slate-700 font-medium px-3 py-2 rounded-full text-sm transition-transform hover:scale-105"
               >
                 {getFacilityIcon(facility.name)}
-
                 {facility.name}
               </span>
             ))}
-
             {facilitiesDetails.length === 0 && hotel.facilities?.length > 0 && (
               <p className="text-sm text-slate-500">Loading facilities...</p>
             )}
-
             {!hotel.facilities?.length && (
               <p className="text-sm text-slate-500">No facilities listed.</p>
             )}
@@ -531,85 +428,113 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Room Details Table */}
-
+      {/* --- MODIFIED & ENHANCED TABLE --- */}
       <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">
+        <h3 className="text-xl font-bold text-blue-900 mb-4">
           Room Type Details
         </h3>
-
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-500">
-            <thead className="text-xs text-gray-700 uppercase bg-slate-50">
+          <table className="w-full text-sm text-left">
+            {/* New Gradient Header */}
+            <thead className="text-xs text-white uppercase bg-gradient-to-r from-blue-600 to-purple-600">
               <tr>
-                <th scope="col" className="px-6 py-3 rounded-l-lg">
+                <th
+                  scope="col"
+                  className="px-6 py-4 font-semibold tracking-wider rounded-l-lg"
+                >
                   Room Type
                 </th>
-
-                <th scope="col" className="px-6 py-3">
-                  Bed Type
+                <th
+                  scope="col"
+                  className="px-6 py-4 font-semibold tracking-wider"
+                >
+                  Details
                 </th>
-
-                <th scope="col" className="px-6 py-3 text-center">
-                  Max Occupancy
+                <th
+                  scope="col"
+                  className="px-6 py-4 font-semibold tracking-wider text-center"
+                >
+                  Available / Booked
                 </th>
-
-                <th scope="col" className="px-6 py-3 text-center">
-                  Available
+                <th
+                  scope="col"
+                  className="px-6 py-4 font-semibold tracking-wider"
+                >
+                  Occupancy
                 </th>
-
-                <th scope="col" className="px-6 py-3 text-center">
-                  Booked
-                </th>
-
-                <th scope="col" className="px-6 py-3 text-center">
-                  Occupancy %
-                </th>
-
-                <th scope="col" className="px-6 py-3 rounded-r-lg">
+                <th
+                  scope="col"
+                  className="px-6 py-4 font-semibold tracking-wider rounded-r-lg"
+                >
                   Avg. Price
                 </th>
               </tr>
             </thead>
-
             <tbody>
-              {hotel.room_type?.map((room, index) => (
-                <tr
-                  key={index}
-                  className="bg-white border-b hover:bg-blue-50 transition-colors"
-                >
-                  <th
-                    scope="row"
-                    className="px-6 py-4 font-bold text-gray-900 whitespace-nowrap"
+              {hotel.room_type?.map((room, index) => {
+                const occupancy = room.availability?.occupancy_percentage || 0;
+                const occupancyColor = getOccupancyColor(occupancy);
+
+                return (
+                  <tr
+                    key={index}
+                    className="bg-white border-b border-gray-100 hover:bg-blue-50/50 transition-colors"
                   >
-                    {room.name}
-                  </th>
-
-                  <td className="px-6 py-4">{room.bed_type}</td>
-
-                  <td className="px-6 py-4 text-center">
-                    {room.max_occupancy}
-                  </td>
-
-                  <td className="px-6 py-4 text-center font-semibold text-emerald-600">
-                    {room.availability?.available_rooms}
-                  </td>
-
-                  <td className="px-6 py-4 text-center font-semibold text-red-600">
-                    {room.availability?.booked_rooms}
-                  </td>
-
-                  <td className="px-6 py-4 text-center">
-                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                      {room.availability?.occupancy_percentage?.toFixed(1)}%
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4 font-semibold text-blue-600">
-                    ${room.pricing?.avg_price?.toFixed(2)}
+                    {/* Enhanced Room Type Cell */}
+                    <td
+                      scope="row"
+                      className="px-6 py-4 font-bold text-gray-800"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FaBed className="text-blue-500" />
+                        <span>{room.name}</span>
+                      </div>
+                    </td>
+                    {/* Details Cell for Bed Type & Occupancy */}
+                    <td className="px-6 py-4 text-gray-600">
+                      <div>{room.bed_type}</div>
+                      <div className="text-xs">
+                        Max Occupancy: {room.max_occupancy}
+                      </div>
+                    </td>
+                    {/* Combined Available/Booked Cell */}
+                    <td className="px-6 py-4 text-center">
+                      <span className="font-semibold text-emerald-600">
+                        {room.availability?.available_rooms}
+                      </span>
+                      <span className="text-gray-400 mx-1">/</span>
+                      <span className="font-semibold text-red-600">
+                        {room.availability?.booked_rooms}
+                      </span>
+                    </td>
+                    {/* Visual Occupancy Bar Cell */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-full bg-slate-200 rounded-full h-2.5">
+                          <div
+                            className={`${occupancyColor} h-2.5 rounded-full`}
+                            style={{ width: `${occupancy}%` }}
+                          ></div>
+                        </div>
+                        <span className="font-semibold text-gray-700 w-14 text-right">
+                          {occupancy.toFixed(1)}%
+                        </span>
+                      </div>
+                    </td>
+                    {/* Enhanced Price Cell */}
+                    <td className="px-6 py-4 font-bold text-lg text-blue-700">
+                      ${room.pricing?.avg_price?.toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              })}
+              {(!hotel.room_type || hotel.room_type.length === 0) && (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-gray-500">
+                    No room type data available.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

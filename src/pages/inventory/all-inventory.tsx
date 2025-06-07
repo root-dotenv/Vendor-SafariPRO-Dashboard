@@ -77,83 +77,28 @@ const InventoryCard: React.FC<{ item: InventoryItem }> = ({ item }) => {
 
 // --- MAIN COMPONENT ---
 export default function AllInventory() {
-  const {
-    data: inventories,
-    isError,
-    isLoading,
-    error,
-  } = useQuery<InventoryItem[], Error>({
-    queryKey: ["inventories"],
-    queryFn: async () => {
-      const response = await axios.get(API_URL);
-      return response.data.results;
-    },
-  });
-
-  if (isLoading)
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="text-center">
-          <FaSpinner className="animate-spin text-blue-500 h-10 w-10 mx-auto" />
-          <p className="ml-3 text-lg text-slate-600 mt-4">
-            Loading Inventory...
-          </p>
-        </div>
-      </div>
-    );
-
-  if (isError)
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-4">
-        <div className="bg-white border-l-4 border-red-500 text-red-700 p-6 rounded-xl shadow-lg max-w-md w-full">
-          <div className="flex items-center gap-3">
-            <FaExclamationTriangle className="h-6 w-6 text-red-500" />
-            <h3 className="font-bold text-lg">Failed to Load Inventory</h3>
-          </div>
-          <p className="text-sm text-red-600 mt-2 bg-red-50 p-3 rounded-lg">
-            {error.message}
-          </p>
-        </div>
-      </div>
-    );
-
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
-      <header className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Inventory Overview
-          </h1>
-        </div>
-      </header>
-
-      <div className="mb-8 p-4 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md border border-gray-100 flex items-center gap-4">
-        <div className="relative flex-grow">
-          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search inventory items..."
-            className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      {inventories && inventories.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {inventories.map((item) => (
-            <InventoryCard key={item.id} item={item} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16">
-          <FaBoxOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500 text-lg mb-2 font-semibold">
-            No Inventory Items Found
-          </p>
-          <p className="text-slate-400">The inventory is currently empty.</p>
-        </div>
-      )}
-    </div>
+    <p>
+      {/* in this page, Let's have a grid layout for inventory category on the left
+      and inventory items on the right side and on top header lets create a
+      modal form to create inventory categories and display the already created
+      inventory categoies, use this ENDPOINT for sending the form data to create
+      inventory categories ""http://192.168.1.193:8090/api/v1/inventory-categories/?hotel_id=0c9c6965-eee2-4af3-8761-83a06ec720f4"" and this ENDPOINT for fetching (getting) all the
+      created inventory categories, then I want that when a user click on a
+      certain inventory category card, i display all the availlable inventory
+      itemms for that particular invotory category, the modal form for sending
+      inventory category data should have the following input field and should
+      have the bottom div/container to display the inputs before sending them to
+      the API, here's the input structure and data types for the inventory form: SEND POST Request to "http://192.168.1.193:8090/api/v1/inventory-categories/?hotel_id=0c9c6965-eee2-4af3-8761-83a06ec720f4" (note write this endpoint as is, don't change anything)
+      {
+    
+    "is_active": boolean (default to true),
+     "name": (string)
+    "description": (string),
+    "hotel": (string) - use default "0c9c6965-eee2-4af3-8761-83a06ec720f4"
+}
+       */}
+      Inventory Goes On Here
+    </p>
   );
 }

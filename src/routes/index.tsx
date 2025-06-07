@@ -17,7 +17,7 @@ import FunThingsToDo from "../pages/my-hotel/fun-things-to-do";
 import Meals from "../pages/my-hotel/meals";
 import Amenities from "../pages/my-hotel/amenities";
 import Neighborhood from "../pages/my-hotel/neighborhood";
-import AboutHotel from "../pages/my-hotel/about-hotel";
+// import AboutHotel from "../pages/my-hotel/about-hotel";
 import Sent from "../pages/messages/sent";
 import Inbox from "../pages/messages/inbox";
 import Compose from "../pages/messages/compose";
@@ -34,7 +34,7 @@ import AddStaff from "../pages/staff-management/add-staff";
 import ServiceManagement from "../pages/staff-management/service-management";
 import Services from "../pages/staff-management/services";
 import HotelEvents from "../pages/calendar/hotel-events";
-import MySchedule from "../pages/calendar/my-schedule";
+// import MySchedule from "../pages/calendar/my-schedule";
 import AddEvent from "../pages/calendar/add-events";
 import AllReviews from "../pages/reviews/all-reviews";
 import Analytics from "../pages/reviews/analytics";
@@ -54,7 +54,7 @@ export interface RouteConfig {
 }
 
 export const allAppRoutes: RouteConfig[] = [
-  { path: "dashboard", element: <Dashboard />, roles: ["admin"] },
+  { path: "dashboard", element: <Dashboard />, roles: ["all"] },
 
   {
     path: "guests",
@@ -134,14 +134,15 @@ export const allAppRoutes: RouteConfig[] = [
         roles: ["admin"],
       },
       {
-        path: "fun-things-to-do",
+        // path: "fun-things-to-do",
+        path: "hotel-events",
         element: <FunThingsToDo />,
         roles: ["admin"],
       },
       { path: "meals", element: <Meals />, roles: ["admin"] },
       { path: "amenities", element: <Amenities />, roles: ["admin"] },
       { path: "map-location", element: <Neighborhood />, roles: ["admin"] },
-      { path: "about-hotel", element: <AboutHotel />, roles: ["admin"] },
+      // { path: "about-hotel", element: <AboutHotel />, roles: ["admin"] },
     ],
   },
   {
@@ -202,7 +203,7 @@ export const allAppRoutes: RouteConfig[] = [
   },
   {
     path: "staffs",
-    element: <Outlet />, // Use Outlet instead of null
+    element: <Outlet />,
     roles: ["admin", "staff"],
     children: [
       { path: "staff-list", element: <StaffList />, roles: ["admin", "staff"] },
