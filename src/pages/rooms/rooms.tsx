@@ -19,7 +19,7 @@ import {
 } from "react-icons/fa";
 
 const mockHotel = {
-  id: "bf085741-2796-406c-86ef-0216a5bccc8b",
+  id: "44f1cafe-59f4-43b6-bf01-4a84668e2d29",
   name: "Dar es Salaam Serena Hotel",
 };
 const HotelContext = createContext(mockHotel);
@@ -54,7 +54,7 @@ interface RoomTypeDetails {
   description: string;
   bed_type: string;
   features_list: FeatureDetail[];
-  amenities_details: AmenityDetail[];
+  amenities_details: string;
 }
 
 interface ApiResponse {
@@ -85,6 +85,9 @@ const fetchHotelRooms = async (
   if (!rooms || rooms.length === 0) {
     return { apiResponse: paginatedData, combinedRooms: [] };
   }
+
+  console.log(`- - - Debug Rooms Response`);
+  console.log(roomsResponse);
 
   // 2. Get unique room type IDs from the current page's results
   const roomTypeIds = [...new Set(rooms.map((room) => room.room_type))];

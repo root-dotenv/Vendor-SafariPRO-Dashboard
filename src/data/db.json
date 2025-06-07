@@ -82,6 +82,183 @@
       "role": "staff"
     }
   ],
+  "inventory_categories": [
+    {
+      "id": "house_keeping",
+      "is_active": true,
+      "name": "House Keeping Supplies",
+      "description": "This category includes all essential supplies for maintaining room cleanliness and guest comfort. It covers cleaning agents, detergents, disinfectants, sponges, and various cloths. Additionally, it contains guest-facing amenities such as soaps, shampoos, lotions, and other toiletries required to ensure a pleasant and hygienic stay for all guests. Proper stock management here is crucial for daily operations."
+    },
+    {
+      "id": "food_beverage",
+      "is_active": true,
+      "name": "Food & Beverage Stock",
+      "description": "Encompasses all perishable and non-perishable items for the hotel's restaurants, bars, and room service. This includes fresh produce, meats, dairy products, dry goods, canned foods, beverages, spirits, wines, and coffee. Maintaining optimal stock levels in this category is vital for menu availability, controlling costs, and ensuring a high-quality dining experience for patrons across all outlets."
+    },
+    {
+      "id": "maintenance_engineering",
+      "is_active": true,
+      "name": "Maintenance & Engineering Parts",
+      "description": "A comprehensive collection of spare parts and tools necessary for the upkeep of the hotel's infrastructure. This category features light bulbs, plumbing fixtures, electrical components, HVAC filters, paint, and various hardware. Effective management ensures that the maintenance team can perform timely repairs and preventative maintenance, guaranteeing the safety and operational readiness of the entire property."
+    },
+    {
+      "id": "linens_uniforms",
+      "is_active": false,
+      "name": "Linens & Uniforms",
+      "description": "Contains all textile assets required for hotel operations. This includes high-quality bed sheets, pillowcases, towels, bathrobes, and tablecloths for guest rooms and dining areas. It also covers the complete range of staff uniforms for different departments, such as front office, housekeeping, and food service. Inventory tracking is key to managing laundry cycles and replacement schedules."
+    },
+    {
+      "id": "events_activities",
+      "is_active": true,
+      "name": "Events & Activities Equipment",
+      "description": "This category holds all equipment needed for hosting meetings, conferences, weddings, and recreational activities. It includes audio-visual systems like projectors and microphones, portable stages, special lighting, and decorative items. For leisure, it might also contain sports equipment or pool accessories. This inventory supports the hotel's event services and enhances the overall guest experience."
+    },
+    {
+      "id": "front_office",
+      "is_active": true,
+      "name": "Front Office Supplies",
+      "description": "Comprises all materials required for the smooth operation of the front desk and concierge services. Key items include stationery, pens, registration cards, key cards, printers, and toners. These supplies are fundamental for guest check-in, check-out, and administrative tasks. Maintaining a well-stocked front office is essential for efficiency and presenting a professional image to guests upon arrival."
+    }
+  ],
+  "inventory_items": [
+    {
+      "id": 1,
+      "name": "Shampoo Bottles (50ml)",
+      "description": "Miniature shampoo bottles for guest bathrooms.",
+      "category_id": "house_keeping",
+      "quantity_instock": 20,
+      "reorder_level": 8,
+      "cost_per_unit": 0.75,
+      "reorder_status": "pending"
+    },
+    {
+      "id": 2,
+      "name": "All-Purpose Cleaner",
+      "description": "Concentrated cleaner for various surfaces.",
+      "category_id": "house_keeping",
+      "quantity_instock": 5,
+      "reorder_level": 9,
+      "cost_per_unit": 12.5,
+      "reorder_status": "pending"
+    },
+    {
+      "id": 3,
+      "name": "Premium Coffee Beans (1kg)",
+      "description": "Whole Arabica coffee beans for restaurant use.",
+      "category_id": "food_beverage",
+      "quantity_instock": 15,
+      "reorder_level": 5,
+      "cost_per_unit": 25,
+      "reorder_status": "pending"
+    },
+    {
+      "id": 4,
+      "name": "Sparkling Water (750ml)",
+      "description": "Bottled sparkling water for bar and room service.",
+      "category_id": "food_beverage",
+      "quantity_instock": 40,
+      "reorder_level": 6,
+      "cost_per_unit": 1.2,
+      "reorder_status": "approved"
+    },
+    {
+      "id": 5,
+      "name": "LED Light Bulbs (E27)",
+      "description": "Energy-efficient light bulbs for room lamps.",
+      "category_id": "maintenance_engineering",
+      "quantity_instock": 80,
+      "reorder_level": 2,
+      "cost_per_unit": 2.15,
+      "reorder_status": "pending"
+    },
+    {
+      "id": 6,
+      "name": "Queen Size Bed Sheets",
+      "description": "High thread count cotton sheets.",
+      "category_id": "linens_uniforms",
+      "quantity_instock": 25,
+      "reorder_level": 3,
+      "cost_per_unit": 22,
+      "reorder_status": "postponed"
+    },
+    {
+      "id": 7,
+      "name": "Front Desk Pens",
+      "description": "Branded ballpoint pens for guest use.",
+      "category_id": "front_office",
+      "quantity_instock": 150,
+      "reorder_level": 1,
+      "cost_per_unit": 0.3,
+      "reorder_status": "pending"
+    },
+    {
+      "id": 8,
+      "name": "Projector Screen",
+      "description": "Portable 100-inch projector screen for events.",
+      "category_id": "events_activities",
+      "quantity_instock": 1,
+      "reorder_level": 10,
+      "cost_per_unit": 150,
+      "reorder_status": "pending"
+    },
+    {
+      "id": "0e28",
+      "name": "TPs",
+      "description": "",
+      "category_id": "house_keeping",
+      "quantity_instock": 7,
+      "reorder_level": 8,
+      "cost_per_unit": 0.11
+    }
+  ],
+  "approved_reorder_requests": [
+    {
+      "id": "a597",
+      "name": "Shampoo Bottles (50ml)",
+      "quantity_to_restock": 8,
+      "total_cost": 6,
+      "category": "House Keeping Supplies",
+      "approved_at": "2025-06-07T12:57:44.305Z"
+    },
+    {
+      "id": "7f3e",
+      "name": "LED Light Bulbs (E27)",
+      "quantity_to_restock": 2,
+      "total_cost": 4.3,
+      "category": "Maintenance & Engineering Parts",
+      "approved_at": "2025-06-07T13:13:08.782Z"
+    },
+    {
+      "id": "3c04",
+      "name": "All-Purpose Cleaner",
+      "quantity_to_restock": 9,
+      "total_cost": 112.5,
+      "category": "House Keeping Supplies",
+      "approved_at": "2025-06-07T13:28:40.013Z"
+    },
+    {
+      "id": "6697",
+      "name": "Front Desk Pens",
+      "quantity_to_restock": 1,
+      "total_cost": 0.3,
+      "category": "Front Office Supplies",
+      "approved_at": "2025-06-07T13:28:47.203Z"
+    }
+  ],
+  "rejected_reorder_requests": [
+    {
+      "id": "f911",
+      "name": "All-Purpose Cleaner",
+      "category": "House Keeping Supplies",
+      "rejected_at": "2025-06-07T13:01:01.946Z"
+    },
+    {
+      "id": "289a",
+      "name": "All-Purpose Cleaner",
+      "category": "House Keeping Supplies",
+      "rejected_at": "2025-06-07T13:29:03.264Z"
+    }
+  ],
   "tasks": [
     {
       "id": "task-001",
@@ -91,7 +268,7 @@
       "assigned_to_id": "user-002-staff",
       "assigned_to_name": "John Doe",
       "department": "House Keeping",
-      "status": "Scheduled",
+      "status": "Completed",
       "task_notes": "Guest checking in at 4 PM. Ensure all surfaces are sanitized and amenities are restocked.",
       "scheduled_date": "2025-06-08",
       "scheduled_time": "11:00",
@@ -138,6 +315,20 @@
       "room_place": "787-A1",
       "assigned_by": "Admin User",
       "assigned_to_name": "Peter Jones"
+    },
+    {
+      "id": "05bc",
+      "task_title": "Dust-Off",
+      "priority": 8,
+      "assigned_to_id": "475a",
+      "department": "Maintenance",
+      "status": "Needs Attention",
+      "task_notes": "A-10",
+      "scheduled_date": "2025-06-10",
+      "scheduled_time": "20:45",
+      "room_place": "F-22",
+      "assigned_by": "Admin User",
+      "assigned_to_name": "BillieJean"
     }
   ],
   "services": [

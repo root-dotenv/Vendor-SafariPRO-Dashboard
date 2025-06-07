@@ -217,7 +217,7 @@ const menuConfig: MenuItemConfig[] = [
         text: "Staff List",
         roles: ["admin", "staff"],
       },
-      { to: "/staffs/tasks", text: "Tasks", roles: ["admin"] }, // Admin only
+      // { to: "/staffs/tasks", text: "Tasks", roles: ["admin"] }, // Admin only
       { to: "/staffs/my-tasks", text: "My Tasks", roles: ["admin", "staff"] },
       { to: "/staffs/add-staff", text: "Add Staff", roles: ["admin"] }, // Admin only
       {

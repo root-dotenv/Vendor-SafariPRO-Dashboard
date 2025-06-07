@@ -111,8 +111,10 @@ export default function NewBooking() {
     amount_required: "",
     property_item_type: "",
     booking_type: "Physical",
-    property_item: "5953bf7b-14f1-4964-a13c-d0a1e8377214",
+    property_item: "c81a2767-f102-42ef-9b9b-07d5be5a4ab0",
   };
+  console.log(`- - - Debugging Form Data Informations`);
+  console.log(initialFormState);
 
   const {
     register,
@@ -148,7 +150,7 @@ export default function NewBooking() {
   >({
     mutationFn: async (newBookingData) => {
       const response = await fetch(
-        "http://booking.tradesync.software/api/v1/bookings/web-create/",
+        "http://booking.tradesync.software/api/v1/bookings/web-create",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -167,7 +169,7 @@ export default function NewBooking() {
     onSuccess: () => {
       setShowSuccess(true);
       reset(initialFormState);
-      window.scrollTo(0, 0); // Scroll to top to show success message
+      window.scrollTo(0, 0);
       setTimeout(() => setShowSuccess(false), 5000);
     },
     onError: (error) => {

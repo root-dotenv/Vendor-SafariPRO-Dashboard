@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   FaTrash,
   FaPlus,
@@ -8,13 +8,71 @@ import {
   FaCreditCard,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { useHotelContext } from "../../contexts/hotelContext";
+
+// Types
+interface Booking {
+  id: string;
+  code: string;
+  full_name: string;
+  email: string;
+  start_date: string;
+  end_date: string;
+  amount_required: string;
+  amount_paid: string;
+  property_item_type: string;
+  reference_number: string;
+  booking_type: "Physical" | "Online";
+}
+
+interface BookingResponse {
+  results: Booking[];
+  count: number;
+}
+
+interface Filters {
+  search: string;
+  paymentStatus: string;
+  bookingType: string;
+  dateRange: string;
+}
+
+// Constants
+const API_BASE = "http://booking.tradesync.software/api/v1";
+const MICROSERVICE_ID = "44f1cafe-59f4-43b6-bf01-4a84668e2d29";
+
+// Axios instance
+const api = axios.create({
+  baseURL: API_BASE,
+});
+
+// Query keys
+const bookingKeys = {
+  all: ["bookings"] as const,
+  lists: () => [...bookingKeys.all, "list"] as const,
+};
+
+// API functions
+const bookingApi = {
+  getBookings: async (): Promise<BookingResponse> => {
+    const { data } = await api.get(
+      //  `/bookings`
+      `/bookings?microservice_item_id=${MICROSERVICE_ID}`
+    );
+    return data;
+  },
+
+  deleteBooking: async (id: string): Promise<void> => {
+    await api.delete(`/bookings/${id}`);
+  },
+};
 
 export default function AllBookings() {
-  const [bookingDetails, setBookingDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
+  const hotel = useHotelContext();
+
+  const [filters, setFilters] = useState<Filters>({
     search: "",
     paymentStatus: "",
     bookingType: "",
@@ -22,83 +80,66 @@ export default function AllBookings() {
   });
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  // Fetch bookings data
-  const fetchBookings = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(
-        `http://booking.tradesync.software/api/v1/bookings?microservice_item_id=bf085741-2796-406c-86ef-0216a5bccc8b`
+  // Fetch bookings query
+  const {
+    data: bookingDetails,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: bookingKeys.lists(),
+    queryFn: bookingApi.getBookings,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 3,
+    refetchOnWindowFocus: false,
+  });
+
+  // Delete booking mutation
+  const deleteBookingMutation = useMutation({
+    mutationFn: bookingApi.deleteBooking,
+    onMutate: async (deletedId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: bookingKeys.lists() });
+
+      // Snapshot the previous value
+      const previousBookings = queryClient.getQueryData<BookingResponse>(
+        bookingKeys.lists()
       );
-      if (!response.ok) throw new Error("Failed to fetch bookings");
-      const data = await response.json();
-      setBookingDetails(data);
-      setIsError(false);
-    } catch (err) {
-      setIsError(true);
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
+      // Optimistically update the cache
+      queryClient.setQueryData<BookingResponse>(bookingKeys.lists(), (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          results: old.results.filter((booking) => booking.id !== deletedId),
+          count: old.count - 1,
+        };
+      });
 
-  // Delete booking
-  const deleteBooking = async (id) => {
-    try {
-      const response = await fetch(
-        `http://booking.tradesync.software/api/v1/bookings/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
-      if (!response.ok) throw new Error("Failed to delete booking");
-      fetchBookings(); // Refresh data
-    } catch (error) {
-      console.error("Error deleting booking:", error);
-    }
-  };
+      // Return a context object with the snapshotted value
+      return { previousBookings };
+    },
+    onError: (err, deletedId, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousBookings) {
+        queryClient.setQueryData(bookingKeys.lists(), context.previousBookings);
+      }
+      console.error("Error deleting booking:", err);
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure we have the latest data
+      queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
+    },
+  });
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this booking?")) {
-      deleteBooking(id);
-    }
-  };
-
-  // * - - Go to the Redirected Page
-  const handleNewBooking = () => {
-    navigate("/bookings/new-booking");
-  };
-
-  if (isError) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Error Loading Bookings
-          </h3>
-          <p className="text-gray-600">{error.message}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading bookings...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const getPaymentStatus = (amountRequired: string, amountPaid: string) => {
+  // Helper functions
+  const getPaymentStatus = (
+    amountRequired: string,
+    amountPaid: string
+  ): string => {
     const required = parseFloat(amountRequired);
     const paid = parseFloat(amountPaid);
 
@@ -107,7 +148,7 @@ export default function AllBookings() {
     return "Partial";
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): string => {
     switch (status) {
       case "Paid":
         return "bg-green-100 text-green-800 border-green-200";
@@ -120,10 +161,30 @@ export default function AllBookings() {
     }
   };
 
-  const getBookingTypeColor = (type) => {
+  const getBookingTypeColor = (type: string): string => {
     return type === "Physical"
       ? "bg-purple-100 text-purple-800 border-purple-200"
       : "bg-blue-100 text-blue-800 border-blue-200";
+  };
+
+  // Event handlers
+  const handleDelete = async (id: string) => {
+    console.log(`- - - DELETEDD HOTEL ID`, id);
+    if (window.confirm("Are you sure you want to delete this booking?")) {
+      try {
+        await deleteBookingMutation.mutateAsync(id);
+      } catch (error) {
+        //  - - - Error handled
+      }
+    }
+  };
+
+  const handleNewBooking = () => {
+    navigate("/bookings/new-booking");
+  };
+
+  const handleRetry = () => {
+    refetch();
   };
 
   // Filter bookings based on search and filters
@@ -146,6 +207,46 @@ export default function AllBookings() {
 
       return matchesSearch && matchesPaymentStatus && matchesBookingType;
     }) || [];
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading bookings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Error Loading Bookings
+          </h3>
+          <p className="text-gray-600 mb-4">
+            {error instanceof Error
+              ? error.message
+              : "An unexpected error occurred"}
+          </p>
+          <button
+            onClick={handleRetry}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log(`- - - HOTEL OBJECT GLOBAL ACCESSS`);
+  console.log(hotel);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -423,10 +524,15 @@ export default function AllBookings() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleDelete(booking.id)}
-                          className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                          disabled={deleteBookingMutation.isPending}
+                          className="text-red-600 hover:text-red-900 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Delete booking"
                         >
-                          <FaTrash />
+                          {deleteBookingMutation.isPending ? (
+                            <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full" />
+                          ) : (
+                            <FaTrash />
+                          )}
                         </button>
                       </div>
                     </td>
@@ -437,7 +543,8 @@ export default function AllBookings() {
           </div>
         </div>
 
-        {filteredBookings.length === 0 && (
+        {/* No results state */}
+        {filteredBookings.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">📋</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">

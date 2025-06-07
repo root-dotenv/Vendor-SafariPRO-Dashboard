@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import styles from "./inventory.module.css";
+import {
+  FaPlus,
+  FaUndo,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 export default function AddInventory() {
   const [formData, setFormData] = useState({
@@ -21,15 +26,14 @@ export default function AddInventory() {
   const addInventoryMutation = useMutation({
     mutationFn: async (newInventory) => {
       const response = await axios.post(
-        "http://localhost:3001/inventory",
+        "http://localhost:3001/inventory_items",
         newInventory
       );
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate and refetch inventory list
       queryClient.invalidateQueries({ queryKey: ["inventories"] });
-      // Reset form
+      // Reset form and errors on success
       setFormData({
         name: "",
         description: "",
@@ -48,46 +52,24 @@ export default function AddInventory() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Clear error when user starts typing
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Item name is required";
-    }
-
-    if (!formData.description.trim()) {
+    if (!formData.name.trim()) newErrors.name = "Item name is required";
+    if (!formData.description.trim())
       newErrors.description = "Description is required";
-    }
-
-    if (!formData.quantity_in_stock || formData.quantity_in_stock < 0) {
+    if (!formData.quantity_in_stock || formData.quantity_in_stock < 0)
       newErrors.quantity_in_stock = "Valid stock quantity is required";
-    }
-
-    if (!formData.quantity_to_reorder || formData.quantity_to_reorder < 0) {
-      newErrors.quantity_to_reorder = "Valid reorder quantity is required";
-    }
-
-    if (!formData.cost_per_unit || formData.cost_per_unit <= 0) {
+    if (!formData.quantity_to_reorder || formData.quantity_to_reorder < 0)
+      newErrors.quantity_to_reorder = "Valid reorder level is required";
+    if (!formData.cost_per_unit || formData.cost_per_unit <= 0)
       newErrors.cost_per_unit = "Valid cost per unit is required";
-    }
-
-    if (!formData.hotel_id.trim()) {
-      newErrors.hotel_id = "Hotel ID is required";
-    }
+    if (!formData.hotel_id.trim()) newErrors.hotel_id = "Hotel ID is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -95,12 +77,8 @@ export default function AddInventory() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
 
-    if (!validateForm()) {
-      return;
-    }
-
-    // Convert numeric fields to appropriate types
     const inventoryData = {
       ...formData,
       quantity_in_stock: parseInt(formData.quantity_in_stock),
@@ -110,7 +88,6 @@ export default function AddInventory() {
         : 0,
       cost_per_unit: parseFloat(formData.cost_per_unit),
     };
-
     addInventoryMutation.mutate(inventoryData);
   };
 
@@ -127,42 +104,38 @@ export default function AddInventory() {
     setErrors({});
   };
 
+  // Common Tailwind classes
+  const formLabelClass = "block text-sm font-medium text-slate-700 mb-1";
+  const formInputClass =
+    "w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 transition";
+  const inputErrorClass = "border-red-500 ring-red-500";
+  const errorTextClass = "text-xs text-red-600 mt-1";
+  const actionButtonClass =
+    "flex items-center justify-center gap-2 font-semibold py-2.5 px-5 rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all transform";
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="p-4 sm:p-6 lg:p-8 bg-slate-100 min-h-screen font-sans">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <h1 className="text-3xl font-bold text-slate-800">
           Add New Inventory Item
         </h1>
-        <p className="text-gray-600">
-          Create a new inventory item for your hotel
+        <p className="text-slate-600">
+          Fill out the form below to create a new item.
         </p>
       </div>
 
-      <div className="max-w-2xl mx-auto">
-        <div className={`${styles.inventoryCard} ${styles.formCard}`}>
-          <div className={styles.cardHeader}>
-            <div className="flex items-center gap-3">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              <span className="font-semibold">New Inventory Item</span>
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/80">
+          <div className="p-5 bg-slate-50 border-b border-slate-200 rounded-t-2xl">
+            <div className="flex items-center gap-3 text-slate-700">
+              <FaPlus />
+              <span className="font-semibold">New Item Details</span>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.formBody}>
-            {/* Item Name */}
-            <div className={styles.formGroup}>
-              <label htmlFor="name" className={styles.formLabel}>
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <div>
+              <label htmlFor="name" className={formLabelClass}>
                 Item Name *
               </label>
               <input
@@ -171,19 +144,18 @@ export default function AddInventory() {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`${styles.formInput} ${
-                  errors.name ? styles.inputError : ""
+                className={`${formInputClass} ${
+                  errors.name ? inputErrorClass : ""
                 }`}
                 placeholder="e.g., Hotel Branded Spring Water"
               />
               {errors.name && (
-                <span className={styles.errorText}>{errors.name}</span>
+                <span className={errorTextClass}>{errors.name}</span>
               )}
             </div>
 
-            {/* Description */}
-            <div className={styles.formGroup}>
-              <label htmlFor="description" className={styles.formLabel}>
+            <div>
+              <label htmlFor="description" className={formLabelClass}>
                 Description *
               </label>
               <textarea
@@ -192,20 +164,19 @@ export default function AddInventory() {
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={3}
-                className={`${styles.formInput} ${styles.formTextarea} ${
-                  errors.description ? styles.inputError : ""
+                className={`${formInputClass} ${
+                  errors.description ? inputErrorClass : ""
                 }`}
-                placeholder="e.g., 500ml bottled spring water with hotel logo. For minibar and complimentary service."
+                placeholder="e.g., 500ml bottled spring water with hotel logo."
               />
               {errors.description && (
-                <span className={styles.errorText}>{errors.description}</span>
+                <span className={errorTextClass}>{errors.description}</span>
               )}
             </div>
 
-            {/* Stock Quantities Row */}
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="quantity_in_stock" className={styles.formLabel}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="quantity_in_stock" className={formLabelClass}>
                   Current Stock *
                 </label>
                 <input
@@ -215,23 +186,19 @@ export default function AddInventory() {
                   value={formData.quantity_in_stock}
                   onChange={handleInputChange}
                   min="0"
-                  className={`${styles.formInput} ${
-                    errors.quantity_in_stock ? styles.inputError : ""
+                  className={`${formInputClass} ${
+                    errors.quantity_in_stock ? inputErrorClass : ""
                   }`}
                   placeholder="980"
                 />
                 {errors.quantity_in_stock && (
-                  <span className={styles.errorText}>
+                  <span className={errorTextClass}>
                     {errors.quantity_in_stock}
                   </span>
                 )}
               </div>
-
-              <div className={styles.formGroup}>
-                <label
-                  htmlFor="quantity_to_reorder"
-                  className={styles.formLabel}
-                >
+              <div>
+                <label htmlFor="quantity_to_reorder" className={formLabelClass}>
                   Reorder Level *
                 </label>
                 <input
@@ -241,23 +208,22 @@ export default function AddInventory() {
                   value={formData.quantity_to_reorder}
                   onChange={handleInputChange}
                   min="0"
-                  className={`${styles.formInput} ${
-                    errors.quantity_to_reorder ? styles.inputError : ""
+                  className={`${formInputClass} ${
+                    errors.quantity_to_reorder ? inputErrorClass : ""
                   }`}
-                  placeholder="1200"
+                  placeholder="100"
                 />
                 {errors.quantity_to_reorder && (
-                  <span className={styles.errorText}>
+                  <span className={errorTextClass}>
                     {errors.quantity_to_reorder}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Cost and Hotel ID Row */}
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label htmlFor="cost_per_unit" className={styles.formLabel}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="cost_per_unit" className={formLabelClass}>
                   Cost per Unit ($) *
                 </label>
                 <input
@@ -268,20 +234,17 @@ export default function AddInventory() {
                   onChange={handleInputChange}
                   min="0"
                   step="0.01"
-                  className={`${styles.formInput} ${
-                    errors.cost_per_unit ? styles.inputError : ""
+                  className={`${formInputClass} ${
+                    errors.cost_per_unit ? inputErrorClass : ""
                   }`}
                   placeholder="0.90"
                 />
                 {errors.cost_per_unit && (
-                  <span className={styles.errorText}>
-                    {errors.cost_per_unit}
-                  </span>
+                  <span className={errorTextClass}>{errors.cost_per_unit}</span>
                 )}
               </div>
-
-              <div className={styles.formGroup}>
-                <label htmlFor="hotel_id" className={styles.formLabel}>
+              <div>
+                <label htmlFor="hotel_id" className={formLabelClass}>
                   Hotel ID *
                 </label>
                 <input
@@ -290,124 +253,50 @@ export default function AddInventory() {
                   name="hotel_id"
                   value={formData.hotel_id}
                   onChange={handleInputChange}
-                  className={`${styles.formInput} ${
-                    errors.hotel_id ? styles.inputError : ""
+                  className={`${formInputClass} ${
+                    errors.hotel_id ? inputErrorClass : ""
                   }`}
                   placeholder="htl-gem-101"
                 />
                 {errors.hotel_id && (
-                  <span className={styles.errorText}>{errors.hotel_id}</span>
+                  <span className={errorTextClass}>{errors.hotel_id}</span>
                 )}
               </div>
             </div>
 
-            {/* Reorder Request (Optional) */}
-            <div className={styles.formGroup}>
-              <label htmlFor="reorder_request" className={styles.formLabel}>
-                Reorder Request (Optional)
-              </label>
-              <input
-                type="number"
-                id="reorder_request"
-                name="reorder_request"
-                value={formData.reorder_request}
-                onChange={handleInputChange}
-                min="0"
-                className={styles.formInput}
-                placeholder="0"
-              />
-              <span className={styles.helpText}>
-                Number of pending reorder requests (leave empty or 0 if none)
-              </span>
-            </div>
-
-            {/* Form Actions */}
-            <div className={styles.formActions}>
+            <div className="pt-6 border-t border-slate-200 flex justify-between items-center">
               <button
                 type="button"
                 onClick={handleReset}
-                className={`${styles.actionButton} ${styles.resetButton}`}
+                className={`${actionButtonClass} bg-slate-600 text-white hover:bg-slate-700`}
                 disabled={addInventoryMutation.isPending}
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                Reset Form
+                <FaUndo /> Reset
               </button>
-
               <button
                 type="submit"
-                className={`${styles.actionButton} ${styles.submitButton}`}
+                className={`${actionButtonClass} bg-gradient-to-r from-blue-600 to-purple-600 text-white`}
                 disabled={addInventoryMutation.isPending}
               >
                 {addInventoryMutation.isPending ? (
-                  <>
-                    <div className={styles.loader}></div>
-                    Adding...
-                  </>
+                  "Adding..."
                 ) : (
                   <>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    Add Inventory Item
+                    <FaPlus /> Add Inventory Item
                   </>
                 )}
               </button>
             </div>
 
-            {/* Success/Error Messages */}
             {addInventoryMutation.isSuccess && (
-              <div className={styles.successMessage}>
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Inventory item added successfully!
+              <div className="flex items-center gap-3 p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">
+                <FaCheckCircle size={20} /> Inventory item added successfully!
               </div>
             )}
-
             {addInventoryMutation.isError && (
-              <div className={styles.errorMessage}>
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Error adding inventory item. Please try again.
+              <div className="flex items-center gap-3 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg">
+                <FaExclamationCircle size={20} /> Error adding inventory item.
+                Please try again.
               </div>
             )}
           </form>

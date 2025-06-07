@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useAuth } from "../../contexts/authcontext"; // Assuming you have this
@@ -13,6 +13,7 @@ import {
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import { IoSave } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 
 // --- Constants and Types ---
 const statuses = ["Scheduled", "In Progress", "Needs Attention"];
@@ -50,6 +51,8 @@ export default function AssignTask() {
     queryFn: fetchStaffList,
   });
 
+  const navigate = useNavigate();
+
   const { mutate, isPending } = useMutation({
     mutationFn: createTask,
     onSuccess: () => {
@@ -65,6 +68,9 @@ export default function AssignTask() {
         scheduled_date: "",
         scheduled_time: "",
         room_place: "",
+      });
+      navigate("/house-keeping/house-keeping-tasks", {
+        state: { successMessage: "You created a new staff member!" },
       });
     },
     onError: (error) => alert(`Error: ${error.message}`),

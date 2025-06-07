@@ -51,7 +51,13 @@ const Login: React.FC = () => {
         className="hidden lg:block bg-cover bg-center"
         style={{ backgroundImage: `url(${loginBgImage})` }}
       >
-        <div className="w-full h-full bg-gradient-to-tr from-violet-700 to-blue-500 bg-opacity-20"></div>
+        <div className="w-full h-full bg-gradient-to-tr from-violet-700 to-blue-500 bg-opacity-20">
+          {/* <img
+            className="w-full h-full object-cover p-0 m-0"
+            src="../../../../public/images/hotel_cover_image.webp"
+            alt="hotel_cover_image"
+          /> */}
+        </div>
       </div>
 
       {/* Right Column: Form */}
