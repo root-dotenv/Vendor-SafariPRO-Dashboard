@@ -17,19 +17,17 @@ import {
   FaCheck,
   FaRedo,
   FaUsers,
-  FaHotel,
   FaStickyNote,
 } from "react-icons/fa";
-import axios from "axios";
 
-// Validation schema
+// * - - - - - Validation Schema
 const bookingSchema = yup.object().shape({
   full_name: yup
     .string()
     .required("Full name is required")
     .min(2, "Name must be at least 2 characters"),
   address: yup.string(),
-  phone_number: yup.number(),
+  phone_number: yup.number().typeError("Phone number must be a valid number"),
   email: yup
     .string()
     .required("Email is required")
@@ -40,25 +38,22 @@ const bookingSchema = yup.object().shape({
     .required("End date is required")
     .test("date-after", "End date must be after start date", function (value) {
       const { start_date } = this.parent;
-      if (start_date && value) {
-        return new Date(value) > new Date(start_date);
-      }
-      return true;
+      return !start_date || !value || new Date(value) > new Date(start_date);
     }),
-  property_item_type: yup.string(),
+  property_item_type: yup.string().required("Please select a room type"),
   number_of_booked_property: yup
     .number()
     .required("Number of rooms is required")
-    .min(1, "At least 1 room is required"),
+    .min(1, "At least 1 room is required")
+    .typeError("Must be a number"),
   amount_paid: yup
     .number()
     .min(0, "Amount paid cannot be negative")
-    .transform((value, originalValue) => {
-      return originalValue === "" ? 0 : value;
-    }),
+    .transform((value, originalValue) => (originalValue === "" ? 0 : value))
+    .typeError("Must be a number"),
 });
 
-// Form data interface
+// * * * - - - FORM DATA INTERFACE
 interface BookingFormData {
   full_name: string;
   address: string;
@@ -80,6 +75,24 @@ interface BookingResponse {
   id: string;
 }
 
+// --- HELPER COMPONENT FOR FORM FIELDS ---
+const FormField: React.FC<{
+  label: string;
+  icon: React.ReactNode;
+  error?: string;
+  children: React.ReactNode;
+  isRequired?: boolean;
+}> = ({ label, icon, error, children, isRequired }) => (
+  <div>
+    <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2">
+      {icon}
+      {label} {isRequired && <span className="text-red-500">*</span>}
+    </label>
+    {children}
+    {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+  </div>
+);
+
 export default function NewBooking() {
   const hotel = useHotelContext();
   const [showSuccess, setShowSuccess] = useState(false);
@@ -87,7 +100,7 @@ export default function NewBooking() {
   const initialFormState: BookingFormData = {
     full_name: "",
     address: "",
-    phone_number: 0,
+    phone_number: undefined,
     email: "",
     start_date: "",
     end_date: "",
@@ -108,7 +121,6 @@ export default function NewBooking() {
     watch,
     setValue,
     reset,
-    getValues,
   } = useForm<BookingFormData>({
     resolver: yupResolver(bookingSchema),
     defaultValues: initialFormState,
@@ -117,14 +129,15 @@ export default function NewBooking() {
 
   const watchedPropertyType = watch("property_item_type");
 
-  // Update amount required when room type changes
   React.useEffect(() => {
     if (watchedPropertyType) {
       const selectedRoom = hotel.room_type.find(
         (rt) => rt.name === watchedPropertyType
       );
       const avgPrice = selectedRoom?.pricing?.avg_price || 0;
-      setValue("amount_required", avgPrice.toString());
+      setValue("amount_required", avgPrice.toFixed(2));
+    } else {
+      setValue("amount_required", "0.00");
     }
   }, [watchedPropertyType, hotel.room_type, setValue]);
 
@@ -138,13 +151,8 @@ export default function NewBooking() {
         "http://booking.tradesync.software/api/v1/bookings/web-create/",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...newBookingData,
-            initialFormState,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newBookingData),
         }
       );
       if (!response.ok) {
@@ -156,26 +164,18 @@ export default function NewBooking() {
       }
       return response.json();
     },
-    onSuccess: (data) => {
-      console.log("Booking created successfully:", data);
-      console.log("Initial form state:", initialFormState);
-      console.log("Final form data:", getValues());
+    onSuccess: () => {
       setShowSuccess(true);
       reset(initialFormState);
-
-      setTimeout(() => {
-        setShowSuccess(false);
-      }, 5000);
+      window.scrollTo(0, 0); // Scroll to top to show success message
+      setTimeout(() => setShowSuccess(false), 5000);
     },
     onError: (error) => {
-      console.error("Error creating booking:", error);
       alert(`Error creating booking: ${error.message}`);
     },
   });
 
   const onSubmit = (data: BookingFormData) => {
-    console.log("Form submitted with data:", data);
-    console.log("Initial form state:", initialFormState);
     createBookingMutation.mutate(data);
   };
 
@@ -186,205 +186,129 @@ export default function NewBooking() {
 
   const currentValues = watch();
 
-  console.log(`BOOKING RESPONSE`);
-  console.log(createBookingMutation);
+  const inputClass = (hasError: boolean) =>
+    `w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all shadow ${
+      hasError
+        ? "border-red-400 bg-red-50 text-red-900 focus:ring-red-500 focus:border-red-500"
+        : "border-slate-300 bg-white focus:ring-blue-500 focus:border-blue-500"
+    }`;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Success Message */}
         {showSuccess && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-            <FaCheck className="text-green-600" size={20} />
-            <span className="text-green-800 font-medium">
-              Booking created successfully!
-            </span>
+          <div className="mb-6 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl p-4 flex items-center gap-3 shadow animate-pulse">
+            <FaCheck size={20} />
+            <span className="font-bold">Booking created successfully!</span>
           </div>
         )}
 
-        {/* Main Form Card */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Form Header */}
-          <div
-            className="px-6 py-4 border-b-2"
-            style={{ backgroundColor: "#CCDCF1", borderColor: "#E6E7EB" }}
-          >
-            <div className="flex items-center gap-3">
-              <FaPlus size={24} className="text-gray-700" />
-              <h1 className="text-2xl font-bold text-gray-800">
+        <div className="bg-white rounded-2xl shadow overflow-hidden border border-gray-100">
+          <header className="flex items-center gap-4 p-6 border-b border-slate-200">
+            <div className="w-2 h-10 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Create New Booking
               </h1>
+              <p className="text-slate-500 text-sm mt-1">
+                Complete the form below to create a new hotel booking.
+              </p>
             </div>
-            <p className="text-gray-600 mt-1">
-              Complete the form below to create a new hotel booking
-            </p>
-          </div>
+          </header>
 
-          {/* Form Body */}
-          <form className="p-6" onSubmit={handleSubmit(onSubmit)}>
-            <div className="space-y-6">
-              {/* Row 1: Guest Information */}
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="p-6 space-y-8">
+              {/* --- Guest Information Section --- */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Full Name */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaUser size={16} />
-                    Full Name <span className="text-red-500">*</span>
-                  </label>
+                <FormField
+                  label="Full Name"
+                  icon={<FaUser className="text-slate-400" />}
+                  error={errors.full_name?.message}
+                  isRequired
+                >
                   <input
                     {...register("full_name")}
                     type="text"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.full_name ? "border-red-300 bg-red-50" : ""
-                    }`}
-                    style={{
-                      borderColor: errors.full_name ? "#FCA5A5" : "#E6E7EB",
-                    }}
+                    className={inputClass(!!errors.full_name)}
                     placeholder="Enter guest's full name"
                   />
-                  {errors.full_name && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.full_name.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaEnvelope size={16} />
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
+                </FormField>
+                <FormField
+                  label="Email Address"
+                  icon={<FaEnvelope className="text-slate-400" />}
+                  error={errors.email?.message}
+                  isRequired
+                >
                   <input
                     {...register("email")}
                     type="email"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.email ? "border-red-300 bg-red-50" : ""
-                    }`}
-                    style={{
-                      borderColor: errors.email ? "#FCA5A5" : "#E6E7EB",
-                    }}
+                    className={inputClass(!!errors.email)}
                     placeholder="guest@example.com"
                   />
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Row 2: Contact Information */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Phone Number */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaPhone size={16} />
-                    Phone Number
-                  </label>
+                </FormField>
+                <FormField
+                  label="Phone Number"
+                  icon={<FaPhone className="text-slate-400" />}
+                  error={errors.phone_number?.message}
+                >
                   <input
                     {...register("phone_number")}
-                    type="number"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.phone_number ? "border-red-300 bg-red-50" : ""
-                    }`}
-                    style={{
-                      borderColor: errors.phone_number ? "#FCA5A5" : "#E6E7EB",
-                    }}
+                    type="tel"
+                    className={inputClass(!!errors.phone_number)}
                     placeholder="+1 (555) 123-4567"
                   />
-                  {errors.phone_number && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.phone_number.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Address */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaMapMarkerAlt size={16} />
-                    Address
-                  </label>
+                </FormField>
+                <FormField
+                  label="Address"
+                  icon={<FaMapMarkerAlt className="text-slate-400" />}
+                  error={errors.address?.message}
+                >
                   <input
                     {...register("address")}
                     type="text"
-                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    style={{ borderColor: "#E6E7EB" }}
-                    placeholder="Guest's address"
+                    className={inputClass(!!errors.address)}
+                    placeholder="123 Main St, Anytown, USA"
                   />
-                </div>
+                </FormField>
               </div>
 
-              {/* Row 3: Booking Dates */}
+              <hr className="border-slate-200" />
+
+              {/* --- Booking Details Section --- */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Start Date */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaCalendarAlt size={16} />
-                    Check-in Date <span className="text-red-500">*</span>
-                  </label>
+                <FormField
+                  label="Check-in Date"
+                  icon={<FaCalendarAlt className="text-slate-400" />}
+                  error={errors.start_date?.message}
+                  isRequired
+                >
                   <input
                     {...register("start_date")}
                     type="date"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.start_date ? "border-red-300 bg-red-50" : ""
-                    }`}
-                    style={{
-                      borderColor: errors.start_date ? "#FCA5A5" : "#E6E7EB",
-                    }}
+                    className={inputClass(!!errors.start_date)}
                   />
-                  {errors.start_date && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.start_date.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* End Date */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaCalendarAlt size={16} />
-                    Check-out Date <span className="text-red-500">*</span>
-                  </label>
+                </FormField>
+                <FormField
+                  label="Check-out Date"
+                  icon={<FaCalendarAlt className="text-slate-400" />}
+                  error={errors.end_date?.message}
+                  isRequired
+                >
                   <input
                     {...register("end_date")}
                     type="date"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.end_date ? "border-red-300 bg-red-50" : ""
-                    }`}
-                    style={{
-                      borderColor: errors.end_date ? "#FCA5A5" : "#E6E7EB",
-                    }}
+                    className={inputClass(!!errors.end_date)}
                   />
-                  {errors.end_date && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.end_date.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Row 4: Room Details */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Room Type */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaBed size={16} />
-                    Room Type <span className="text-red-500">*</span>
-                  </label>
+                </FormField>
+                <FormField
+                  label="Room Type"
+                  icon={<FaBed className="text-slate-400" />}
+                  error={errors.property_item_type?.message}
+                  isRequired
+                >
                   <select
                     {...register("property_item_type")}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.property_item_type
-                        ? "border-red-300 bg-red-50"
-                        : ""
-                    }`}
-                    style={{
-                      borderColor: errors.property_item_type
-                        ? "#FCA5A5"
-                        : "#E6E7EB",
-                    }}
+                    className={inputClass(!!errors.property_item_type)}
                   >
                     <option value="">Select Room Type</option>
                     {hotel.room_type.map((rt) => (
@@ -393,216 +317,159 @@ export default function NewBooking() {
                       </option>
                     ))}
                   </select>
-                  {errors.property_item_type && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.property_item_type.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Number of Rooms */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaUsers size={16} />
-                    Number of Rooms <span className="text-red-500">*</span>
-                  </label>
+                </FormField>
+                <FormField
+                  label="Number of Rooms"
+                  icon={<FaUsers className="text-slate-400" />}
+                  error={errors.number_of_booked_property?.message}
+                  isRequired
+                >
                   <input
-                    {...register("number_of_booked_property", {
-                      valueAsNumber: true,
-                    })}
+                    {...register("number_of_booked_property")}
                     type="number"
                     min="1"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.number_of_booked_property
-                        ? "border-red-300 bg-red-50"
-                        : ""
-                    }`}
-                    style={{
-                      borderColor: errors.number_of_booked_property
-                        ? "#FCA5A5"
-                        : "#E6E7EB",
-                    }}
+                    className={inputClass(!!errors.number_of_booked_property)}
                   />
-                  {errors.number_of_booked_property && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.number_of_booked_property.message}
-                    </p>
-                  )}
-                </div>
+                </FormField>
               </div>
 
-              {/* Row 5: Payment Information */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Amount Paid */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaDollarSign size={16} />
-                    Amount Paid
-                  </label>
-                  <input
-                    {...register("amount_paid", { valueAsNumber: true })}
-                    type="string"
-                    step="0.01"
-                    min="0"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.amount_paid ? "border-red-300 bg-red-50" : ""
-                    }`}
-                    style={{
-                      borderColor: errors.amount_paid ? "#FCA5A5" : "#E6E7EB",
-                    }}
-                    placeholder="0.00"
-                  />
-                  {errors.amount_paid && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.amount_paid.message}
-                    </p>
-                  )}
-                </div>
+              <hr className="border-slate-200" />
 
-                {/* Amount Required */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <FaDollarSign size={16} />
-                    Amount Required
-                  </label>
+              {/* --- Payment Information Section --- */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <FormField
+                  label="Amount Paid ($)"
+                  icon={<FaDollarSign className="text-emerald-500" />}
+                  error={errors.amount_paid?.message}
+                >
                   <input
-                    {...register("amount_required")}
+                    {...register("amount_paid")}
                     type="number"
                     step="0.01"
                     min="0"
-                    className="w-full px-4 py-3 border rounded-lg bg-gray-100 focus:outline-none"
-                    style={{ borderColor: "#E6E7EB" }}
-                    placeholder="Select room type first"
+                    className={inputClass(!!errors.amount_paid)}
+                    placeholder="0.00"
+                  />
+                </FormField>
+                <FormField
+                  label="Amount Required ($)"
+                  icon={<FaDollarSign className="text-slate-400" />}
+                >
+                  <input
+                    {...register("amount_required")}
+                    type="text"
+                    className={`${inputClass(
+                      false
+                    )} bg-slate-100 cursor-not-allowed`}
                     readOnly
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Amount is automatically set based on selected room type
-                  </p>
-                </div>
+                </FormField>
               </div>
             </div>
 
-            {/* Form Footer */}
-            <div
-              className="mt-6 px-6 py-4 border-t bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4"
-              style={{ borderColor: "#E6E7EB" }}
-            >
-              <div className="text-sm text-gray-600">
+            <footer className="mt-6 px-6 py-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="text-sm text-slate-500">
                 <span className="text-red-500">*</span> Required fields
               </div>
-
-              <div className="flex gap-3 w-full sm:w-auto">
+              <div className="flex gap-4 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all hover:opacity-80 flex-1 sm:flex-none justify-center"
-                  style={{ backgroundColor: "#6B7280", color: "white" }}
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 transition-all hover:bg-slate-300"
                 >
-                  <FaRedo size={16} />
-                  Clear
+                  <FaRedo size={14} /> Clear
                 </button>
-
                 <button
                   type="submit"
                   disabled={!isValid || createBookingMutation.isPending}
-                  className="flex items-center gap-2 px-8 py-3 rounded-lg font-medium text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-none justify-center"
-                  style={{ backgroundColor: "#CCDCF1", color: "#374151" }}
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 transition-all hover:shadow hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                 >
                   {createBookingMutation.isPending ? (
                     <>
-                      <FaSpinner className="animate-spin" size={16} />
-                      Creating Booking...
+                      <FaSpinner className="animate-spin" size={16} />{" "}
+                      Creating...
                     </>
                   ) : (
                     <>
-                      <FaPlus size={16} />
-                      Create Booking
+                      <FaPlus size={16} /> Create Booking
                     </>
                   )}
                 </button>
               </div>
-            </div>
+            </footer>
           </form>
         </div>
 
-        {/* Booking Summary Card */}
-        <div className="mt-6 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <FaStickyNote size={18} />
-            Booking Summary
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-gray-600 flex items-center gap-1">
-                <FaHotel size={12} />
-                Hotel:
-              </span>
-              <p className="text-gray-800 ml-4">
-                {hotel.name || "Not specified"}
+        {/* --- Booking Summary Card --- */}
+        <div className="mt-8 bg-white rounded-2xl shadow p-6 border border-gray-100">
+          <div className="flex items-center gap-3 mb-4">
+            <FaStickyNote className="text-blue-500" size={20} />
+            <h3 className="text-xl font-bold text-slate-800">
+              Live Booking Summary
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm">
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <span className="block text-xs font-semibold text-slate-500">
+                Hotel
+              </span>{" "}
+              <p className="text-slate-800 font-medium">{hotel.name}</p>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <span className="block text-xs font-semibold text-slate-500">
+                Guest Name
+              </span>{" "}
+              <p className="text-slate-800 font-medium">
+                {currentValues.full_name || "..."}
               </p>
             </div>
-            <div>
-              <span className="font-medium text-gray-600 flex items-center gap-1">
-                <FaUser size={12} />
-                Guest Name:
-              </span>
-              <p className="text-gray-800 ml-4">
-                {currentValues.full_name || "Not entered"}
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <span className="block text-xs font-semibold text-slate-500">
+                Email
+              </span>{" "}
+              <p className="text-slate-800 font-medium truncate">
+                {currentValues.email || "..."}
               </p>
             </div>
-            <div>
-              <span className="font-medium text-gray-600 flex items-center gap-1">
-                <FaEnvelope size={12} />
-                Email:
-              </span>
-              <p className="text-gray-800 ml-4">
-                {currentValues.email || "Not entered"}
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <span className="block text-xs font-semibold text-slate-500">
+                Room Type
+              </span>{" "}
+              <p className="text-slate-800 font-medium">
+                {currentValues.property_item_type || "..."}
               </p>
             </div>
-            <div>
-              <span className="font-medium text-gray-600 flex items-center gap-1">
-                <FaBed size={12} />
-                Room Type:
-              </span>
-              <p className="text-gray-800 ml-4">
-                {currentValues.property_item_type || "Not selected"}
-              </p>
-            </div>
-            <div>
-              <span className="font-medium text-gray-600 flex items-center gap-1">
-                <FaUsers size={12} />
-                Number of Rooms:
-              </span>
-              <p className="text-gray-800 ml-4">
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <span className="block text-xs font-semibold text-slate-500">
+                # of Rooms
+              </span>{" "}
+              <p className="text-slate-800 font-medium">
                 {currentValues.number_of_booked_property}
               </p>
             </div>
-            <div>
-              <span className="font-medium text-gray-600 flex items-center gap-1">
-                <FaCalendarAlt size={12} />
-                Stay Period:
-              </span>
-              <p className="text-gray-800 ml-4">
+            <div className="p-3 bg-slate-50 rounded-lg col-span-2 md:col-span-1">
+              <span className="block text-xs font-semibold text-slate-500">
+                Stay Period
+              </span>{" "}
+              <p className="text-slate-800 font-medium">
                 {currentValues.start_date && currentValues.end_date
-                  ? `${currentValues.start_date} to ${currentValues.end_date}`
-                  : "Not selected"}
+                  ? `${currentValues.start_date} → ${currentValues.end_date}`
+                  : "..."}
               </p>
             </div>
-            <div>
-              <span className="font-medium text-gray-600 flex items-center gap-1">
-                <FaDollarSign size={12} />
-                Amount Required:
-              </span>
-              <p className="text-gray-800 ml-4">
+            <div className="p-3 bg-emerald-50 rounded-lg">
+              <span className="block text-xs font-semibold text-emerald-700">
+                Total Required
+              </span>{" "}
+              <p className="text-emerald-800 font-bold text-base">
                 ${currentValues.amount_required || "0.00"}
               </p>
             </div>
-            <div>
-              <span className="font-medium text-gray-600 flex items-center gap-1">
-                <FaDollarSign size={12} />
-                Amount Paid:
-              </span>
-              <p className="text-gray-800 ml-4">
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <span className="block text-xs font-semibold text-blue-700">
+                Total Paid
+              </span>{" "}
+              <p className="text-blue-800 font-bold text-base">
                 ${currentValues.amount_paid || "0.00"}
               </p>
             </div>

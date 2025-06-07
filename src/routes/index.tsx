@@ -44,6 +44,7 @@ import LostAndFound from "../pages/house-keeping/lost-and-found";
 import AssignTask from "../pages/house-keeping/assign-task";
 import HouseKeepingTasks from "../pages/house-keeping/house-keeping-tasks";
 import GuestDetail from "../pages/guests/GuestDetail";
+import RoomCategories from "../pages/rooms/rooms-categories";
 
 export interface RouteConfig {
   path: string;
@@ -112,7 +113,8 @@ export const allAppRoutes: RouteConfig[] = [
     roles: ["admin"],
     children: [
       { path: "add-room", element: <AddRoom />, roles: ["admin"] },
-      { path: "all-rooms", element: <Rooms />, roles: ["admin"] },
+      { path: "all-rooms", element: <Rooms />, roles: ["all"] },
+      { path: "room-categories", element: <RoomCategories />, roles: ["all"] },
     ],
   },
   {
@@ -225,11 +227,11 @@ export const allAppRoutes: RouteConfig[] = [
         element: <HotelEvents />,
         roles: ["admin", "staff"],
       },
-      {
-        path: "my-schedule",
-        element: <MySchedule />,
-        roles: ["admin", "staff"],
-      },
+      // {
+      //   path: "my-schedule",
+      //   element: <MySchedule />,
+      //   roles: ["admin", "staff"],
+      // },
       { path: "add-event", element: <AddEvent />, roles: ["admin"] },
     ],
   },

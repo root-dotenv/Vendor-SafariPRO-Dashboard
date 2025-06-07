@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from "react"; // Import useState and useEffect
-import styles from "./dashboard.module.css";
+import React, { useEffect, useState } from "react";
+
 import {
   FaBed,
   FaMoneyBillWave,
   FaStar,
   FaMapMarkerAlt,
-  FaCalendarAlt,
-  FaUsers,
   FaWifi,
   FaSwimmingPool,
   FaUtensils,
   FaParking,
-  FaRegCalendarCheck,
   FaDumbbell,
   FaSpa,
+  FaConciergeBell,
+  FaCoffee,
 } from "react-icons/fa";
+
 import {
   PieChart,
   Pie,
@@ -28,380 +28,586 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
+
 import { useHotelContext } from "../../contexts/hotelContext";
 
-// Define an interface for a single facility detail response
+// --- TYPES ---
+
 interface FacilityDetail {
   id: string;
+
   name: string;
+
   code: string;
+
   description: string;
-  icon: string | null; // Assuming icon could be a URL or a specific identifier
-  // ... other properties from your API response if needed
+
+  icon: string | null;
 }
+
+// --- HELPER COMPONENTS ---
+
+const DashboardStatCard: React.FC<{
+  icon: React.ReactNode;
+
+  title: string;
+
+  children: React.ReactNode;
+}> = ({ icon, title, children }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+    <div className="flex items-center gap-4 mb-4">
+      <div className="bg-blue-100 p-3 rounded-full">{icon}</div>
+
+      <h3 className="text-lg font-bold text-gray-700">{title}</h3>
+    </div>
+
+    <div className="space-y-2 text-sm">{children}</div>
+  </div>
+);
+
+const ChartWrapper: React.FC<{ title: string; children: React.ReactNode }> = ({
+  title,
+
+  children,
+}) => (
+  <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 h-full">
+    <h3 className="text-lg font-bold text-gray-800 mb-4">{title}</h3>
+
+    <div className="h-80">{children}</div>
+  </div>
+);
+
+// --- MAIN DASHBOARD COMPONENT ---
 
 const Dashboard = () => {
   const hotel = useHotelContext();
-  console.log(`- - - Hotel Context`);
-  console.log(hotel);
 
-  // State to store fetched facility details
   const [facilitiesDetails, setFacilitiesDetails] = useState<FacilityDetail[]>(
     []
   );
+
   const API_BASE_URL = "https://hotel.tradesync.software/api/v1";
 
   useEffect(() => {
     const fetchFacilities = async () => {
-      if (hotel && hotel.facilities && hotel.facilities.length > 0) {
-        const fetchedDetails: FacilityDetail[] = [];
-        for (const facilityId of hotel.facilities) {
-          try {
-            const response = await fetch(
-              `${API_BASE_URL}/facilities/${facilityId}`
-            );
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data: FacilityDetail = await response.json();
-            fetchedDetails.push(data);
-          } catch (error) {
-            console.error(`Failed to fetch facility ${facilityId}:`, error);
-          }
+      if (hotel && hotel.facilities?.length > 0) {
+        try {
+          const promises = hotel.facilities.map((id) =>
+            fetch(`${API_BASE_URL}/facilities/${id}`).then((res) => {
+              if (!res.ok) throw new Error(`Facility fetch failed for ${id}`);
+
+              return res.json();
+            })
+          );
+
+          const results = await Promise.all(promises);
+
+          setFacilitiesDetails(results);
+        } catch (error) {
+          console.error("Failed to fetch facilities:", error);
+
+          setFacilitiesDetails([]);
         }
-        setFacilitiesDetails(fetchedDetails);
       } else {
-        setFacilitiesDetails([]); // Clear facilities if none are present in hotel data
+        setFacilitiesDetails([]);
       }
     };
 
     fetchFacilities();
-  }, [hotel]); // Re-run effect if hotel object changes (e.g., on context update)
+  }, [hotel]);
 
-  // Data for charts - NOW DYNAMICALLY FETCHED FROM 'hotel' CONTEXT
+  // --- ENHANCED CHART COLORS & DATA ---
+
+  const COLORS = {
+    green: "#22c55e", // emerald-500
+
+    red: "#ef4444", // red-500
+
+    amber: "#f59e0b", // amber-500
+
+    blue: "#3b82f6", // blue-500
+
+    purple: "#8b5cf6", // purple-500
+  };
+
   const roomStatusData = [
     {
       name: "Available",
-      value: hotel.availability_stats.status_counts.Available || 0,
-      color: "#4CAF50", // Green
+
+      value: hotel.availability_stats?.status_counts?.Available || 0,
+
+      color: COLORS.green,
     },
+
     {
       name: "Booked",
-      value: hotel.availability_stats.status_counts.Booked || 0,
-      color: "#F44336", // Red
+
+      value: hotel.availability_stats?.status_counts?.Booked || 0,
+
+      color: COLORS.red,
     },
+
     {
       name: "Maintenance",
-      value: hotel.availability_stats.status_counts.Maintenance || 0,
-      color: "#FFC107", // Amber
+
+      value: hotel.availability_stats?.status_counts?.Maintenance || 0,
+
+      color: COLORS.amber,
     },
   ];
 
-  const roomTypeData = hotel.room_type.map((room) => ({
-    name: room.name,
-    available: room.availability.available_rooms,
-    booked: room.availability.booked_rooms,
-    maintenance: room.availability.maintenance_rooms,
-  }));
+  const roomTypeData =
+    hotel.room_type?.map((room) => ({
+      name: room.name,
+
+      available: room.availability?.available_rooms || 0,
+
+      booked: room.availability?.booked_rooms || 0,
+
+      maintenance: room.availability?.maintenance_rooms || 0,
+    })) || [];
 
   const pricingData = [
-    { name: "Min", price: hotel.pricing_data.min },
-    { name: "Avg", price: hotel.pricing_data.avg },
-    { name: "Max", price: hotel.pricing_data.max },
+    { name: "Min Price", price: hotel.pricing_data?.min || 0 },
+
+    { name: "Avg Price", price: hotel.pricing_data?.avg || 0 },
+
+    { name: "Max Price", price: hotel.pricing_data?.max || 0 },
   ];
 
-  // This `difference` function seems unrelated to the current usage
-  // const difference = (a: number, b: number) => {
-  //   return a - b;
-  // };
+  // Helper to render themed icons for facilities
 
-  // Helper function to render icons based on facility name
   const getFacilityIcon = (facilityName: string) => {
-    switch (facilityName.toLowerCase()) {
-      case "free wifi":
-        return <FaWifi />;
-      case "swimming pool":
-        return <FaSwimmingPool />;
-      case "restaurant":
-        return <FaUtensils />;
-      case "parking":
-        return <FaParking />;
-      case "fitness center": // Example for another common facility
-        return <FaDumbbell />;
-      case "spa": // Example for another common facility
-        return <FaSpa />;
-      default:
-        return null; // No specific icon, or you can use a generic one
-    }
+    const name = facilityName.toLowerCase();
+
+    const iconClass = "w-5 h-5";
+
+    if (name.includes("wifi"))
+      return <FaWifi className={`${iconClass} text-blue-500`} />;
+
+    if (name.includes("pool"))
+      return <FaSwimmingPool className={`${iconClass} text-cyan-500`} />;
+
+    if (name.includes("restaurant"))
+      return <FaUtensils className={`${iconClass} text-orange-500`} />;
+
+    if (name.includes("parking"))
+      return <FaParking className={`${iconClass} text-slate-600`} />;
+
+    if (name.includes("gym") || name.includes("fitness"))
+      return <FaDumbbell className={`${iconClass} text-red-500`} />;
+
+    if (name.includes("spa"))
+      return <FaSpa className={`${iconClass} text-pink-500`} />;
+
+    if (name.includes("service") || name.includes("concierge"))
+      return <FaConciergeBell className={`${iconClass} text-purple-500`} />;
+
+    if (name.includes("coffee") || name.includes("breakfast"))
+      return <FaCoffee className={`${iconClass} text-amber-700`} />;
+
+    return <FaStar className={`${iconClass} text-gray-400`} />;
+  };
+
+  const RADIAN = Math.PI / 180;
+
+  const renderCustomizedLabel = ({
+    cx,
+
+    cy,
+
+    midAngle,
+
+    innerRadius,
+
+    outerRadius,
+
+    percent,
+  }) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+        className="font-bold text-sm"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
   };
 
   return (
-    <div className={styles.dashboard}>
-      <header className={styles.header}>
-        <h1 className="text-[1.75rem] font-extrabold">Dashboard</h1>
-        <p className="text-[1.5rem] font-medium">Welcome Back!</p>
+    <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+      <header className="flex items-center gap-3 mb-8">
+        <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Hotel Dashboard
+        </h1>
       </header>
 
-      <div className={styles.overviewCards}>
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <FaBed />
-            <h3>Rooms Overview</h3>
-          </div>
-          <div className={styles.cardContent}>
-            <p>
-              Total Rooms: <strong>{hotel.summary_counts.rooms}</strong>
-            </p>
-            <p>
-              Available:
-              <strong>
-                {hotel.availability_stats.status_counts.Available}
-              </strong>
-            </p>
-            <p>
-              Occupancy Rate:
-              <strong>{hotel.occupancy_rate?.toFixed(2)}%</strong>
-            </p>
-          </div>
-        </div>
+      {/* Overview Cards */}
 
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <FaMoneyBillWave />
-            <h3>Pricing</h3>
-          </div>
-          <div className={styles.cardContent}>
-            <p>
-              Avg. Room Price:{" "}
-              <strong>${hotel.average_room_price?.toFixed(2)}</strong>
-            </p>
-            <p>
-              Min: <strong>${hotel.pricing_data.min?.toFixed(2)}</strong>
-            </p>
-            <p>
-              Max: <strong>${hotel.pricing_data.max?.toFixed(2)}</strong>
-            </p>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <DashboardStatCard
+          icon={<FaBed className="text-blue-500" />}
+          title="Rooms Overview"
+        >
+          <p className="flex justify-between">
+            Total Rooms:{" "}
+            <strong className="text-gray-800">
+              {hotel.summary_counts?.rooms || 0}
+            </strong>
+          </p>
 
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <FaStar />
-            <h3>Ratings</h3>
-          </div>
-          <div className={styles.cardContent}>
-            <p>
-              Average Rating: <strong>{hotel.average_rating}/5</strong>
-            </p>
-            <p>
-              Total Reviews: <strong>{hotel.review_count}</strong>
-            </p>
-            <p>
-              Star Rating:
-              <strong className="gap-2 flex items-center">
-                {hotel.star_rating}
-                <FaStar style={{ color: "gold" }} />
-              </strong>
-            </p>
-          </div>
-        </div>
+          <p className="flex justify-between">
+            Available:{" "}
+            <strong className="text-emerald-600">
+              {hotel.availability_stats?.status_counts?.Available || 0}
+            </strong>
+          </p>
 
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <FaMapMarkerAlt />
-            <h3>Property Info</h3>
-          </div>
-          <div className={styles.cardContent}>
-            <p>
-              Floors: <strong>{hotel.number_floors}</strong>
-            </p>
-            <p>
-              Restaurants: <strong>{hotel.number_restaurants}</strong>
-            </p>
-            <p>
-              Built: <strong>{hotel.year_built}</strong>
-            </p>
-          </div>
-        </div>
+          <p className="flex justify-between">
+            Occupancy:{" "}
+            <strong className="text-blue-600">
+              {hotel.occupancy_rate?.toFixed(1) || 0}%
+            </strong>
+          </p>
+        </DashboardStatCard>
+
+        <DashboardStatCard
+          icon={<FaMoneyBillWave className="text-emerald-500" />}
+          title="Revenue & Pricing"
+        >
+          <p className="flex justify-between">
+            Avg. Room Price:{" "}
+            <strong className="text-gray-800">
+              ${hotel.average_room_price?.toFixed(2) || "0.00"}
+            </strong>
+          </p>
+
+          <p className="flex justify-between">
+            Min Price:{" "}
+            <strong className="text-gray-800">
+              ${hotel.pricing_data?.min?.toFixed(2) || "0.00"}
+            </strong>
+          </p>
+
+          <p className="flex justify-between">
+            Max Price:{" "}
+            <strong className="text-gray-800">
+              ${hotel.pricing_data?.max?.toFixed(2) || "0.00"}
+            </strong>
+          </p>
+        </DashboardStatCard>
+
+        <DashboardStatCard
+          icon={<FaStar className="text-amber-500" />}
+          title="Ratings & Reviews"
+        >
+          <p className="flex justify-between">
+            Avg. Rating:{" "}
+            <strong className="text-gray-800">
+              {hotel.average_rating || 0}/5
+            </strong>
+          </p>
+
+          <p className="flex justify-between">
+            Total Reviews:{" "}
+            <strong className="text-gray-800">{hotel.review_count || 0}</strong>
+          </p>
+
+          <p className="flex justify-between items-center">
+            Hotel Stars:{" "}
+            <strong className="flex items-center gap-1 text-amber-500">
+              {hotel.star_rating} <FaStar />
+            </strong>
+          </p>
+        </DashboardStatCard>
+
+        <DashboardStatCard
+          icon={<FaMapMarkerAlt className="text-purple-500" />}
+          title="Property Info"
+        >
+          <p className="flex justify-between">
+            Floors:{" "}
+            <strong className="text-gray-800">
+              {hotel.number_floors || 0}
+            </strong>
+          </p>
+
+          <p className="flex justify-between">
+            Restaurants:{" "}
+            <strong className="text-gray-800">
+              {hotel.number_restaurants || 0}
+            </strong>
+          </p>
+
+          <p className="flex justify-between">
+            Year Built:{" "}
+            <strong className="text-gray-800">
+              {hotel.year_built || "N/A"}
+            </strong>
+          </p>
+        </DashboardStatCard>
       </div>
 
-      <div className={styles.chartRow}>
-        <div className={styles.chartCard}>
-          <h3>Room Status Distribution</h3>
-          <div className={styles.chartContainer}>
-            <ResponsiveContainer width="100%" height={300}>
+      {/* Charts Row */}
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+        <div className="lg:col-span-2">
+          <ChartWrapper title="Room Status">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={roomStatusData}
+                  dataKey="value"
+                  nameKey="name"
                   cx="50%"
                   cy="50%"
+                  outerRadius={110}
+                  innerRadius={60}
                   labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
+                  label={renderCustomizedLabel}
                 >
                   {roomStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.color}
+                      stroke={entry.color}
+                    />
                   ))}
                 </Pie>
-                <Tooltip />
+
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+
+                    backdropFilter: "blur(5px)",
+
+                    borderRadius: "12px",
+
+                    borderColor: "#e5e7eb",
+                  }}
+                />
+
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+          </ChartWrapper>
         </div>
 
-        <div className={styles.chartCard}>
-          <h3>Room Type Availability</h3>
-          <div className={styles.chartContainer}>
-            <ResponsiveContainer width="100%" height={300}>
+        <div className="lg:col-span-3">
+          <ChartWrapper title="Room Type Availability">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={roomTypeData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
+                margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+
                 <YAxis />
-                <Tooltip />
+
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+
+                    backdropFilter: "blur(5px)",
+
+                    borderRadius: "12px",
+
+                    borderColor: "#e5e7eb",
+                  }}
+                />
+
                 <Legend />
+
                 <Bar
                   dataKey="available"
                   stackId="a"
-                  fill="#4CAF50"
+                  fill={COLORS.green}
                   name="Available"
                 />
+
                 <Bar
                   dataKey="booked"
                   stackId="a"
-                  fill="#F44336"
+                  fill={COLORS.red}
                   name="Booked"
                 />
+
                 <Bar
                   dataKey="maintenance"
                   stackId="a"
-                  fill="#FFC107"
+                  fill={COLORS.amber}
                   name="Maintenance"
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </ChartWrapper>
         </div>
       </div>
 
-      <div className={styles.chartRow}>
-        <div className={styles.chartCard}>
-          <h3>Pricing Range</h3>
-          <div className={styles.chartContainer}>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={pricingData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="price" fill="#8884d8" name="Price ($)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+      {/* Second Chart and Info Row */}
 
-        <div className={styles.infoCard}>
-          <h3>Quick Information</h3>
-          <div className={styles.infoGrid}>
-            <div className={styles.infoItem}>
-              <FaCalendarAlt className={styles.infoIcon} />
-              <div>
-                <p>Check-in</p>
-                <p>
-                  <strong>{hotel.check_in_from}</strong>
-                </p>
-              </div>
-            </div>
-            <div className={styles.infoItem}>
-              <FaRegCalendarCheck className={styles.infoIcon} />
-              <div>
-                <p>Check-out</p>
-                <p>
-                  <strong>{hotel.check_out_to}</strong>
-                </p>
-              </div>
-            </div>
-            <div className={styles.infoItem}>
-              <FaUsers className={styles.infoIcon} />
-              <div>
-                <p>Staff</p>
-                <p>
-                  <strong>{hotel.summary_counts.staff}</strong>
-                </p>
-              </div>
-            </div>
-            <div className={styles.infoItem}>
-              <FaWifi className={styles.infoIcon} />{" "}
-              {/* Generic icon for facilities count */}
-              <div>
-                <p>Facilities</p>
-                <p>
-                  <strong>{hotel.facilities?.length || 0}</strong>
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <ChartWrapper title="Pricing Range">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={pricingData}
+              margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+            >
+              <defs>
+                <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS.blue} stopOpacity={0.8} />
 
-          {/* --- Top Facilities --- */}
-          <h4>Top Facilities</h4>
-          <div className={styles.facilities}>
-            {facilitiesDetails.slice(0, 6).map((facility) => (
-              <span key={facility.id} className={styles.facilityTag}>
+                  <stop
+                    offset="95%"
+                    stopColor={COLORS.purple}
+                    stopOpacity={0.9}
+                  />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
+              <XAxis dataKey="name" />
+
+              <YAxis tickFormatter={(value) => `$${value}`} />
+
+              <Tooltip
+                formatter={(value) => `$${value}`}
+                contentStyle={{
+                  backgroundColor: "rgba(255, 255, 255, 0.8)",
+
+                  backdropFilter: "blur(5px)",
+
+                  borderRadius: "12px",
+
+                  borderColor: "#e5e7eb",
+                }}
+              />
+
+              <Bar dataKey="price" fill="url(#colorPrice)" name="Price ($)" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartWrapper>
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">
+            Top Facilities
+          </h3>
+
+          <div className="flex flex-wrap gap-3">
+            {facilitiesDetails.slice(0, 8).map((facility) => (
+              <span
+                key={facility.id}
+                className="flex items-center gap-2 bg-slate-100 text-slate-700 font-medium px-3 py-2 rounded-full text-sm transition-transform hover:scale-105"
+              >
                 {getFacilityIcon(facility.name)}
+
                 {facility.name}
               </span>
             ))}
+
             {facilitiesDetails.length === 0 && hotel.facilities?.length > 0 && (
-              <p>Loading facilities...</p>
+              <p className="text-sm text-slate-500">Loading facilities...</p>
             )}
-            {hotel.facilities?.length === 0 && (
-              <p>No facilities listed for this hotel.</p>
+
+            {!hotel.facilities?.length && (
+              <p className="text-sm text-slate-500">No facilities listed.</p>
             )}
           </div>
         </div>
       </div>
 
-      <div className={styles.tableSection}>
-        <h3 className={`font-semibold text-[1.25rem] my-[0.5rem] ml-[0.5rem]`}>
+      {/* Room Details Table */}
+
+      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">
           Room Type Details
         </h3>
-        <div className={styles.tableContainer}>
-          <table>
-            <thead>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-slate-50">
               <tr>
-                <th>Room Type</th>
-                <th>Bed Type</th>
-                <th>Max Occupancy</th>
-                <th>Available</th>
-                <th>Under Maintenance</th>
-                <th>Booked</th>
-                <th>Occupancy (%) </th>
-                <th>Avg. Price</th>
+                <th scope="col" className="px-6 py-3 rounded-l-lg">
+                  Room Type
+                </th>
+
+                <th scope="col" className="px-6 py-3">
+                  Bed Type
+                </th>
+
+                <th scope="col" className="px-6 py-3 text-center">
+                  Max Occupancy
+                </th>
+
+                <th scope="col" className="px-6 py-3 text-center">
+                  Available
+                </th>
+
+                <th scope="col" className="px-6 py-3 text-center">
+                  Booked
+                </th>
+
+                <th scope="col" className="px-6 py-3 text-center">
+                  Occupancy %
+                </th>
+
+                <th scope="col" className="px-6 py-3 rounded-r-lg">
+                  Avg. Price
+                </th>
               </tr>
             </thead>
+
             <tbody>
-              {hotel.room_type.map((room, index) => (
-                <tr key={index}>
-                  <td>{room.name}</td>
-                  <td>{room.bed_type}</td>
-                  <td>{room.max_occupancy}</td>
-                  <td>{room.availability.available_rooms}</td>
-                  <td>{room.availability.maintenance_rooms}</td>
-                  <td>{room.availability.booked_rooms}</td>
-                  <td>{room.availability.occupancy_percentage?.toFixed(2)}%</td>
-                  <td>${room.pricing.avg_price?.toFixed(2)}</td>
+              {hotel.room_type?.map((room, index) => (
+                <tr
+                  key={index}
+                  className="bg-white border-b hover:bg-blue-50 transition-colors"
+                >
+                  <th
+                    scope="row"
+                    className="px-6 py-4 font-bold text-gray-900 whitespace-nowrap"
+                  >
+                    {room.name}
+                  </th>
+
+                  <td className="px-6 py-4">{room.bed_type}</td>
+
+                  <td className="px-6 py-4 text-center">
+                    {room.max_occupancy}
+                  </td>
+
+                  <td className="px-6 py-4 text-center font-semibold text-emerald-600">
+                    {room.availability?.available_rooms}
+                  </td>
+
+                  <td className="px-6 py-4 text-center font-semibold text-red-600">
+                    {room.availability?.booked_rooms}
+                  </td>
+
+                  <td className="px-6 py-4 text-center">
+                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      {room.availability?.occupancy_percentage?.toFixed(1)}%
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 font-semibold text-blue-600">
+                    ${room.pricing?.avg_price?.toFixed(2)}
+                  </td>
                 </tr>
               ))}
             </tbody>

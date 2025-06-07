@@ -1,306 +1,157 @@
-import { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import styles from "./inventory.module.css";
-import { BiSolidEditAlt } from "react-icons/bi";
-import { FaRegTrashAlt } from "react-icons/fa";
-import { FiBox } from "react-icons/fi";
+import {
+  FaBoxOpen,
+  FaSearch,
+  FaSpinner,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 
+const API_URL = "http://192.168.1.193:8090/api/v1/inventory-items/";
+
+// --- TYPE DEFINITION ---
 interface InventoryItem {
   id: string;
   name: string;
   description: string;
-  quantity_in_stock: number;
-  quantity_to_reorder: number;
-  cost_per_unit: number;
-  reorder_request: boolean;
+  quantity_instock: number;
+  reorder_level: number;
+  cost_per_unit: string;
 }
 
-export default function AllInventory() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentItem, setCurrentItem] = useState<InventoryItem | null>(null);
-  const [editedItem, setEditedItem] = useState<Partial<InventoryItem>>({});
+// --- HELPER & CHILD COMPONENTS ---
 
+const InventoryCard: React.FC<{ item: InventoryItem }> = ({ item }) => {
+  const isLowStock = item.quantity_instock <= item.reorder_level;
+  return (
+    <div className="relative bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex flex-col gap-4 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+      <div
+        className={`absolute top-4 right-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-md ${
+          isLowStock
+            ? "bg-red-100 text-red-800"
+            : "bg-emerald-100 text-emerald-800"
+        }`}
+      >
+        <div
+          className={`w-2 h-2 rounded-full ${
+            isLowStock ? "bg-red-500" : "bg-emerald-500"
+          }`}
+        ></div>
+        {isLowStock ? "Low Stock" : "In Stock"}
+      </div>
+      <div className="flex items-center gap-4">
+        <div
+          className={`p-4 rounded-xl ${
+            isLowStock ? "bg-red-50" : "bg-blue-50"
+          }`}
+        >
+          <FaBoxOpen
+            className={`w-8 h-8 ${
+              isLowStock ? "text-red-500" : "text-blue-500"
+            }`}
+          />
+        </div>
+        <h3 className="text-xl font-bold text-slate-800">{item.name}</h3>
+      </div>
+      <p className="text-sm text-slate-600 flex-grow min-h-[40px]">
+        {item.description}
+      </p>
+      <div className="grid grid-cols-3 gap-2 text-center bg-slate-50 p-2 rounded-lg mt-auto">
+        <div>
+          <p className="text-xs text-slate-500">In Stock</p>
+          <strong className="text-slate-800">{item.quantity_instock}</strong>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500">Reorder At</p>
+          <strong className="text-slate-800">{item.reorder_level}</strong>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500">Cost/Unit</p>
+          <strong className="text-emerald-600">${item.cost_per_unit}</strong>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN COMPONENT ---
+export default function AllInventory() {
   const {
-    data: inventories = [],
+    data: inventories,
     isError,
     isLoading,
     error,
-  } = useQuery({
+  } = useQuery<InventoryItem[], Error>({
     queryKey: ["inventories"],
     queryFn: async () => {
-      const response = await axios.get(`http://localhost:3001/inventory`);
-      return response.data;
+      const response = await axios.get(API_URL);
+      return response.data.results;
     },
   });
 
-  const handleEdit = (inventory: InventoryItem) => {
-    setCurrentItem(inventory);
-    setEditedItem({ ...inventory });
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (inventoryId: string) => {
-    console.log("Delete inventory ID:", inventoryId);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditedItem((prev) => ({
-      ...prev,
-      [name]:
-        name === "quantity_in_stock" ||
-        name === "quantity_to_reorder" ||
-        name === "cost_per_unit"
-          ? Number(value)
-          : value,
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Updated inventory:", editedItem);
-    setIsModalOpen(false);
-  };
-
   if (isLoading)
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className={styles.loader}></div>
-        <p className="ml-3 text-lg text-gray-600">Loading inventories...</p>
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-blue-500 h-10 w-10 mx-auto" />
+          <p className="ml-3 text-lg text-slate-600 mt-4">
+            Loading Inventory...
+          </p>
+        </div>
       </div>
     );
 
   if (isError)
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-          <div className="flex items-center mb-2">
-            <svg
-              className="w-5 h-5 text-red-500 mr-2"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <h3 className="text-red-800 font-medium">
-              Error Loading Inventories
-            </h3>
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-4">
+        <div className="bg-white border-l-4 border-red-500 text-red-700 p-6 rounded-xl shadow-lg max-w-md w-full">
+          <div className="flex items-center gap-3">
+            <FaExclamationTriangle className="h-6 w-6 text-red-500" />
+            <h3 className="font-bold text-lg">Failed to Load Inventory</h3>
           </div>
-          <p className="text-red-700">{(error as Error).message}</p>
+          <p className="text-sm text-red-600 mt-2 bg-red-50 p-3 rounded-lg">
+            {error.message}
+          </p>
         </div>
       </div>
     );
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">
-          Inventory Management
-        </h1>
-        <p className="text-gray-600 text-sm">
-          Manage your hotel inventory items
-        </p>
-      </div>
-
-      <div className={styles.inventoryGrid}>
-        {inventories.map((inv: InventoryItem, i: number) => (
-          <div key={inv.id} className={styles.inventoryCard}>
-            <div className={styles.cardHeader}>
-              <div className={styles.itemNumber}>#{i + 1}</div>
-              <div className={styles.stockBadge}>
-                <span
-                  className={`${styles.stockIndicator} ${
-                    inv.quantity_in_stock <= inv.quantity_to_reorder
-                      ? styles.lowStock
-                      : styles.inStock
-                  }`}
-                ></span>
-                {inv.quantity_in_stock <= inv.quantity_to_reorder
-                  ? "Low Stock"
-                  : "In Stock"}
-              </div>
-            </div>
-
-            <div className={styles.cardBody}>
-              <h3 className={styles.itemName}>
-                <FiBox /> {inv.name}
-              </h3>
-              <p className={styles.itemDescription}>{inv.description}</p>
-
-              <div className={styles.inventoryDetails}>
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Stock:</span>
-                  <span className={styles.detailValue}>
-                    {inv.quantity_in_stock}
-                  </span>
-                </div>
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Reorder at:</span>
-                  <span className={styles.detailValue}>
-                    {inv.quantity_to_reorder}
-                  </span>
-                </div>
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Cost/Unit:</span>
-                  <span className={styles.detailValue}>
-                    ${inv.cost_per_unit}
-                  </span>
-                </div>
-                {inv.reorder_request && (
-                  <div className={styles.reorderAlert}>
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Reorder Requested
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.cardActions}>
-              <button
-                onClick={() => handleEdit(inv)}
-                className={`${styles.actionButton} ${styles.editButton}`}
-              >
-                <BiSolidEditAlt size={18} />
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(inv.id)}
-                className={`${styles.actionButton} ${styles.deleteButton}`}
-              >
-                <FaRegTrashAlt size={18} />
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {inventories.length === 0 && (
-        <div className="text-center py-8">
-          <div className="text-gray-400 mb-3">
-            <svg
-              className="mx-auto w-10 h-10"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-              />
-            </svg>
-          </div>
-          <h3 className="text-md font-medium text-gray-900 mb-1">
-            No inventory items found
-          </h3>
-          <p className="text-sm text-gray-500">
-            Get started by adding your first inventory item.
-          </p>
+    <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+      <header className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Inventory Overview
+          </h1>
         </div>
-      )}
+      </header>
 
-      {/* Edit Modal */}
-      {isModalOpen && currentItem && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Edit Inventory Item</h2>
-              <button
-                className={styles.closeButton}
-                onClick={() => setIsModalOpen(false)}
-              >
-                &times;
-              </button>
-            </div>
+      <div className="mb-8 p-4 bg-white/60 backdrop-blur-sm rounded-2xl shadow-md border border-gray-100 flex items-center gap-4">
+        <div className="relative flex-grow">
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search inventory items..."
+            className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Item Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={editedItem.name || ""}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Description</label>
-                <input
-                  type="text"
-                  name="description"
-                  value={editedItem.description || ""}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Quantity in Stock</label>
-                <input
-                  type="number"
-                  name="quantity_in_stock"
-                  value={editedItem.quantity_in_stock || ""}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Reorder Quantity</label>
-                <input
-                  type="number"
-                  name="quantity_to_reorder"
-                  value={editedItem.quantity_to_reorder || ""}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Cost per Unit ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="cost_per_unit"
-                  value={editedItem.cost_per_unit || ""}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                />
-              </div>
-
-              <div className={styles.formActions}>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className={styles.submitButton}>
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
+      {inventories && inventories.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {inventories.map((item) => (
+            <InventoryCard key={item.id} item={item} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16">
+          <FaBoxOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500 text-lg mb-2 font-semibold">
+            No Inventory Items Found
+          </p>
+          <p className="text-slate-400">The inventory is currently empty.</p>
         </div>
       )}
     </div>

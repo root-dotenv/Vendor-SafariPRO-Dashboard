@@ -98,6 +98,11 @@ const menuConfig: MenuItemConfig[] = [
     roles: ["admin"],
     subRoutes: [
       { to: "/rooms/add-room", text: "Add Room", roles: ["admin"] },
+      {
+        to: "/rooms/room-categories",
+        text: "Room Categories",
+        roles: ["admin"],
+      },
       { to: "/rooms/all-rooms", text: "All Rooms", roles: ["admin"] },
     ],
   },
@@ -117,18 +122,22 @@ const menuConfig: MenuItemConfig[] = [
         text: "Hotel Services",
         roles: ["admin"],
       },
-      {
-        to: "/my-hotel/safari-pro-status",
-        text: "Safari Pro Status",
-        roles: ["admin"],
-      },
+      // {
+      //   to: "/my-hotel/safari-pro-status",
+      //   text: "Safari Pro Status",
+      //   roles: ["admin"],
+      // },
       {
         to: "/my-hotel/fun-things-to-do",
         text: "Fun Things To Do",
         roles: ["admin"],
       },
       { to: "/my-hotel/meals", text: "Meals", roles: ["admin"] },
-      { to: "/my-hotel/amenities", text: "Amenities", roles: ["admin"] },
+      {
+        to: "/my-hotel/amenities",
+        text: "Features & Amenities",
+        roles: ["admin"],
+      },
       { to: "/my-hotel/map-location", text: "Map Location", roles: ["admin"] },
       { to: "/my-hotel/about-hotel", text: "About Hotel", roles: ["admin"] },
     ],
@@ -222,7 +231,7 @@ const menuConfig: MenuItemConfig[] = [
   {
     to: "/calendar",
     icon: <IoCalendarNumberOutline size={20} />,
-    text: "Calendar",
+    text: "Events",
     roles: ["admin", "staff"],
     subRoutes: [
       {
@@ -230,11 +239,11 @@ const menuConfig: MenuItemConfig[] = [
         text: "Hotel Events",
         roles: ["admin", "staff"],
       },
-      {
-        to: "/calendar/my-schedule",
-        text: "My Schedule",
-        roles: ["admin", "staff"],
-      },
+      // {
+      //   to: "/calendar/my-schedule",
+      //   text: "My Schedule",
+      //   roles: ["admin", "staff"],
+      // },
       { to: "/calendar/add-event", text: "Add Event", roles: ["admin"] }, // Admin only
     ],
   },

@@ -1,261 +1,366 @@
-import { useState, useEffect } from "react";
+import React, { useState, useMemo, createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { type RoomType } from "./types";
-import styles from "./rooms.module.css";
-import { RxEnterFullScreen } from "react-icons/rx";
-import { IoBedOutline } from "react-icons/io5";
-import { LuUsers } from "react-icons/lu";
-import { truncateStr } from "../../utils/truncate";
-import { FaCheck } from "react-icons/fa6";
-import { MdEdit } from "react-icons/md";
+import {
+  FaBed,
+  FaUsers,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaTimesCircle,
+  FaSearch,
+  FaFilter,
+  FaStar,
+  FaWifi,
+  FaSwimmingPool,
+  FaUtensils,
+  FaParking,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
 
-const Rooms = () => {
-  const [selectedRoom, setSelectedRoom] = useState<RoomType | null>(null);
-  console.log(`SELECTED ROOM :`, selectedRoom);
-  const {
-    data: roomsTypes,
-    error,
-    isError,
-    isLoading,
-  } = useQuery({
-    queryKey: ["hotels"],
-    queryFn: async () => {
-      const response = await axios.get(
-        "https://hotel.tradesync.software/api/v1/room-types/"
-      );
-      console.log(
-        `TradeSync API Hotel Types Data Response`,
-        response.data.results
-      );
-      return response.data.results;
+const mockHotel = {
+  id: "bf085741-2796-406c-86ef-0216a5bccc8b",
+  name: "Dar es Salaam Serena Hotel",
+};
+const HotelContext = createContext(mockHotel);
+const useHotelContext = () => useContext(HotelContext);
+
+// --- TYPE DEFINITIONS ---
+interface Room {
+  id: string;
+  code: string;
+  description: string;
+  image: string;
+  max_occupancy: number;
+  price_per_night: number;
+  availability_status: "Available" | "Booked" | "Maintenance";
+  average_rating: string;
+  room_type: string;
+}
+
+interface AmenityDetail {
+  id: string;
+  name: string;
+}
+
+interface FeatureDetail {
+  id: string;
+  name: string;
+}
+
+interface RoomTypeDetails {
+  id: string;
+  name: string;
+  description: string;
+  bed_type: string;
+  features_list: FeatureDetail[];
+  amenities_details: AmenityDetail[];
+}
+
+interface ApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Room[];
+}
+
+interface CombinedRoom extends Room {
+  roomTypeInfo: RoomTypeDetails;
+}
+
+// --- API Fetching Logic (Updated for Pagination) ---
+const fetchHotelRooms = async (
+  hotelId: string,
+  page: number
+): Promise<{ apiResponse: ApiResponse; combinedRooms: CombinedRoom[] }> => {
+  if (!hotelId) throw new Error("Hotel ID is not provided.");
+
+  // 1. Fetch the paginated list of rooms for the hotel
+  const roomsResponse = await axios.get<ApiResponse>(
+    `https://hotel.tradesync.software/api/v1/rooms/?hotel_id=${hotelId}&page=${page}`
+  );
+  const paginatedData = roomsResponse.data;
+  const rooms: Room[] = paginatedData.results;
+
+  if (!rooms || rooms.length === 0) {
+    return { apiResponse: paginatedData, combinedRooms: [] };
+  }
+
+  // 2. Get unique room type IDs from the current page's results
+  const roomTypeIds = [...new Set(rooms.map((room) => room.room_type))];
+
+  // 3. Fetch all unique room type details for the current page
+  const roomTypePromises = roomTypeIds.map((id) =>
+    axios.get(`https://hotel.tradesync.software/api/v1/room-types/${id}`)
+  );
+  const roomTypeResults = await Promise.all(roomTypePromises);
+  const roomTypeMap: Map<string, RoomTypeDetails> = new Map(
+    roomTypeResults.map((res) => [res.data.id, res.data])
+  );
+
+  // 4. Merge the datasets
+  const combinedRooms: CombinedRoom[] = rooms
+    .map((room) => ({
+      ...room,
+      roomTypeInfo: roomTypeMap.get(room.room_type),
+    }))
+    .filter((room) => room.roomTypeInfo);
+
+  return { apiResponse: paginatedData, combinedRooms };
+};
+
+// --- HELPER & CHILD COMPONENTS ---
+
+const StatusBadge: React.FC<{ status: Room["availability_status"] }> = ({
+  status,
+}) => {
+  const styles = {
+    Available: {
+      bg: "bg-emerald-100",
+      text: "text-emerald-700",
+      icon: <FaCheckCircle />,
     },
-  });
+    Booked: { bg: "bg-red-100", text: "text-red-700", icon: <FaTimesCircle /> },
+    Maintenance: {
+      bg: "bg-amber-100",
+      text: "text-amber-700",
+      icon: <FaExclamationTriangle />,
+    },
+  }[status];
+  return (
+    <div
+      className={`absolute top-3 left-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold shadow ${styles.bg} ${styles.text}`}
+    >
+      {styles.icon} {status}
+    </div>
+  );
+};
 
-  useEffect(() => {
-    if (roomsTypes && roomsTypes.length > 0) {
-      setSelectedRoom(roomsTypes[0]);
-    }
-  }, [roomsTypes]);
-
-  console.log(`- - - Debugging`);
-  console.log("hotelTypes (data from query):", roomsTypes);
-  console.log("error object:", error);
-  console.log("isError status:", isError);
-  console.log("isLoading status:", isLoading);
-
-  if (isLoading) {
-    return (
-      <div className="w-screen min-h-screen flex items-center justify-center">
-        Loading Animation Goes Here
-      </div>
-    );
-  }
-
-  if (isError) {
-    return <div>Error loading rooms: {error?.message || "Unknown error"}</div>;
-  }
-
-  const hotelTypes: RoomType[] = roomsTypes || [];
+const RoomCard: React.FC<{ room: CombinedRoom }> = ({ room }) => {
+  const { roomTypeInfo } = room;
+  const getAmenityIcon = (amenityName: string) => {
+    const name = amenityName.toLowerCase();
+    if (name.includes("wifi")) return <FaWifi className="text-blue-500" />;
+    if (name.includes("pool"))
+      return <FaSwimmingPool className="text-cyan-500" />;
+    if (name.includes("restaurant"))
+      return <FaUtensils className="text-orange-500" />;
+    if (name.includes("parking"))
+      return <FaParking className="text-slate-600" />;
+    return <FaStar className="text-amber-500" />;
+  };
 
   return (
-    <div className={`px-[1rem] py-[1rem] gap-x-[1rem] flex`}>
-      {/* - - - Hotel Types */}
-      <div className="">
-        {/* Filters and Search */}
-        <div className="">Filters and Search Goes Here</div>
-        {/*  - - - - -  */}
-        {/* - - - Rooms Types Cards */}
-        <ul className="flex flex-col gap-y-[1rem]">
-          {hotelTypes.map((ht) => (
-            <li
-              className={`${styles.typeCard} grid grid-cols-12 px-[1.5rem] py-[1rem] gap-x-[1.5rem] border-[1px] border-[#EFEFEF] shadow-sm  cursor-pointer transition-[500ms]`}
-              key={ht.id}
-              onClick={() => setSelectedRoom(ht)}
-            >
-              {/* - - - Hotel Type Image (LeftSide) */}
-              <div className={`col-span-3 flex items-center`}>
-                {
-                  <img
-                    className="w-full p-0 block object-cover rounded"
-                    src={ht.image}
-                    alt={"custom room type image attribute"}
-                  />
-                }
-              </div>
-              {/* - - - Hotel Type Details (RightSide) */}
-              <div className={`col-span-9 flex flex-col gap-y-[0.5rem]`}>
-                {/* - - -  */}
-                <div className="w-full flex items-center justify-between">
-                  <span className={`font-semibold text-[1.5rem] capitalize`}>
-                    {ht.name}
-                  </span>
-
-                  <span
-                    className={` ${
-                      ht.is_active ? "bg-[#D5F5E6]" : "bg-[#E4F593]"
-                    } text-black px-[0.75rem] py-[0.375rem] font-semibold text-[0.75rem] capitalize rounded-[0.625rem]`}
-                  >
-                    {ht.is_active ? "Available" : "Occupied"}
-                  </span>
-                </div>
-                {/* - - -  */}
-                <div className={`flex items-center gap-x-4`}>
-                  <span className="flex items-center gap-x-2 text-[0.875rem] font-semibold">
-                    <RxEnterFullScreen size={20} color="#535B75" />{" "}
-                    {ht.size_sqm || "35 sqm"}
-                  </span>
-                  <span className="flex items-center gap-x-2 text-[0.875rem] font-semibold">
-                    <IoBedOutline size={20} color="#535B75" /> {ht.bed_type}
-                  </span>
-                  <span className="flex items-center gap-x-2 text-[0.875rem] font-semibold">
-                    <LuUsers size={20} color="#535B75" /> {ht.max_occupancy}{" "}
-                    Guests
-                  </span>
-                </div>
-                {/* - - -  */}
-                <p className="text-[1rem] font-medium truncate-[20ch]">
-                  {truncateStr(ht.description, 25)}
-                </p>
-                {/* - - - */}
-                <div className="w-full flex items-center justify-between">
-                  <span className="text-[#535B75] font-medium">
-                    Availability:{" "}
-                    <span className="text-black text-[1rem] font-bold">
-                      BR/{ht.room_availability} Rooms
-                    </span>
-                  </span>
-                  <span className="text-black text-[1.5rem] font-semibold">
-                    ${ht.base_price}
-                    <span className="text-[#535B75] text-[1.125rem] font-medium">
-                      /night
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+      <div className="relative h-48">
+        <img
+          src={room.image}
+          alt={roomTypeInfo.name}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+        <StatusBadge status={room.availability_status} />
+        <div className="absolute bottom-3 right-3 text-white font-bold text-2xl">
+          ${room.price_per_night}{" "}
+          <span className="text-sm font-normal">/ night</span>
+        </div>
       </div>
-
-      {/* - - - Hotel Type Details Modal */}
-      <div className="bg-[#FFF] rounded-md w-full min-h-screen h-[90vh] sticky top-[110px] overflow-y-scroll shadow-sm p-6">
-        {selectedRoom ? (
-          <div className="space-y-6">
-            {/* - - - Header with name and edit button */}
-            <div className="flex justify-between items-center">
-              <h2 className="text-[1.75rem] font-bold capitalize">
-                {selectedRoom.name}
-              </h2>
-
-              {/* - - - Edit Room Type Button */}
-              <button className="gap-[6px] bg-[#E4F593] text-black px-4 py-[6px] rounded-md cursor-pointer hover:bg-[#ccdb80] transition text-[0.875rem] flex items-cente">
-                <MdEdit size={17} color="#000" /> Edit
-              </button>
-            </div>
-
-            {/* - - - Status badge */}
-            <div
-              className={`inline-block ${
-                selectedRoom.is_active ? "bg-[#D5F5E6]" : "bg-[#E4F593]"
-              } text-black px-3 py-1 font-semibold text-sm capitalize rounded-md`}
-            >
-              {selectedRoom.is_active ? "Available" : "Occupied"}
-            </div>
-
-            {/* - - - Main image */}
-            <div className="w-full h-64 rounded-lg overflow-hidden">
-              <img
-                src={selectedRoom.image}
-                alt={selectedRoom.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {/* - - - Basic info grid */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="flex items-center gap-2">
-                <RxEnterFullScreen size={20} color="#535B75" />
-                <span>{selectedRoom.size_sqm || "N/A"} sqm</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <IoBedOutline size={20} color="#535B75" />
-                <span>{selectedRoom.bed_type}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <LuUsers size={20} color="#535B75" />
-                <span>Max {selectedRoom.max_occupancy} Guests</span>
-              </div>
-            </div>
-
-            {/* - - - Price and availability */}
-            <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-              <div>
-                <span className="text-gray-600">Availability: </span>
-                <span className="font-bold">
-                  {selectedRoom.room_availability} Rooms
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-2xl font-bold">
-                  ${selectedRoom.base_price}
-                </span>
-                <span className="text-gray-600 ml-1">/night</span>
-              </div>
-            </div>
-
-            {/* - - - Full description */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Description</h3>
-              <p className="text-gray-700">{selectedRoom.description}</p>
-            </div>
-
-            {/* - - - Features */}
-            <div className="w-full ">
-              <h3 className=" text-lg font-semibold mb-2">Features</h3>
-              <ul className="w-full grid grid-cols-12 space-x-2">
-                {selectedRoom.features.map((feature, index) => (
-                  <li
-                    key={index}
-                    className="col-span-6 flex items-center gap-3"
-                  >
-                    <span className="bg-[#D5F5E6] rounded-full p-[6px]">
-                      <FaCheck size={14} color="#42745c" />
-                    </span>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* - - - Amenities */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Amenities</h3>
-              <ul className="w-full grid grid-cols-12 space-x-2">
-                {selectedRoom.amenities.map((amenity, index) => (
-                  <li
-                    key={index}
-                    className="col-span-6 flex items-center gap-2"
-                  >
-                    <span className="bg-[#D5F5E6] rounded-full p-[6px]">
-                      <FaCheck size={14} color="#42745c" />
-                    </span>
-                    <span>{amenity}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      <div className="p-5 flex flex-col flex-grow">
+        <h3 className="text-xl font-bold text-slate-800">
+          {roomTypeInfo.name}
+        </h3>
+        <p className="text-sm text-slate-500 mb-3 font-medium">
+          Room #{room.code}
+        </p>
+        <div className="flex items-center gap-4 text-sm text-slate-600 border-y border-slate-100 py-2 my-2">
+          <span className="flex items-center gap-1.5">
+            <FaUsers /> {room.max_occupancy} Guests
+          </span>
+          <span className="flex items-center gap-1.5">
+            <FaBed /> {roomTypeInfo.bed_type}
+          </span>
+        </div>
+        <div className="flex-grow">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+            Top Amenities
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {roomTypeInfo?.amenities_details?.slice(0, 4).map((amenity) => (
+              <span
+                key={amenity.id}
+                className="flex items-center gap-1.5 bg-slate-100 text-slate-700 text-xs font-medium px-2 py-1 rounded-full"
+              >
+                {getAmenityIcon(amenity.name)}
+                {amenity.name}
+              </span>
+            ))}
           </div>
-        ) : (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <p>No room types available</p>
-            </div>
-          </div>
-        )}
+        </div>
+        <button className="w-full mt-4 py-2 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 transition-all hover:shadow-lg hover:-translate-y-0.5">
+          Manage Room
+        </button>
       </div>
     </div>
   );
 };
 
-export default Rooms;
+// --- MAIN COMPONENT ---
+export default function RoomsGrid() {
+  const hotel = useHotelContext();
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    queryKey: ["hotelRooms", hotel.id, page],
+    queryFn: () => fetchHotelRooms(hotel.id, page),
+    enabled: !!hotel.id,
+    keepPreviousData: true, // For smooth pagination
+  });
+
+  const { combinedRooms, apiResponse } = data || {};
+
+  const filteredRooms = useMemo(() => {
+    if (!combinedRooms) return [];
+    return combinedRooms.filter((room) => {
+      const lowerSearch = searchTerm.toLowerCase();
+      const matchesSearch =
+        room.code.toLowerCase().includes(lowerSearch) ||
+        room.roomTypeInfo.name.toLowerCase().includes(lowerSearch);
+      const matchesType =
+        typeFilter === "all" || room.roomTypeInfo.id === typeFilter;
+      const matchesStatus =
+        statusFilter === "all" || room.availability_status === statusFilter;
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [combinedRooms, searchTerm, typeFilter, statusFilter]);
+
+  const roomTypes = useMemo(() => {
+    if (!combinedRooms) return [];
+    const types = new Map(
+      combinedRooms.map((room) => [
+        room.roomTypeInfo.id,
+        room.roomTypeInfo.name,
+      ])
+    );
+    return Array.from(types, ([id, name]) => ({ id, name }));
+  }, [combinedRooms]);
+
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading Hotel Rooms...</p>
+        </div>
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
+        <div className="bg-white border-l-4 border-red-500 text-red-700 p-8 rounded-xl shadow max-w-md w-full">
+          <h3 className="font-bold text-lg mb-2">Error Fetching Rooms</h3>
+          <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+            {error.message}
+          </p>
+        </div>
+      </div>
+    );
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+      <header className="flex items-center gap-3 mb-8">
+        <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Manage Hotel Rooms
+        </h1>
+      </header>
+
+      {/* Filters & Search */}
+      <div className="mb-8 p-4 bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+        <div className="relative md:col-span-1">
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by name or code..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="relative">
+          <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-full appearance-none pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Room Types</option>
+            {roomTypes.map((rt) => (
+              <option key={rt.id} value={rt.id}>
+                {rt.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="relative">
+          <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full appearance-none pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Statuses</option>
+            <option value="Available">Available</option>
+            <option value="Booked">Booked</option>
+            <option value="Maintenance">Maintenance</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Rooms Grid */}
+      {isFetching && (
+        <div className="text-center mb-4 text-blue-600 font-semibold">
+          Fetching next page...
+        </div>
+      )}
+      {filteredRooms.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredRooms.map((room) => (
+            <RoomCard key={room.id} room={room} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16">
+          <FaBed className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500 text-lg mb-2 font-semibold">
+            No Rooms Found
+          </p>
+          <p className="text-slate-400">
+            Try adjusting your search or filter criteria.
+          </p>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center items-center gap-4 mt-12">
+        <button
+          onClick={() => setPage((old) => Math.max(old - 1, 1))}
+          disabled={!apiResponse?.previous || isFetching}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-purple-500 transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+        >
+          <FaChevronLeft /> Previous
+        </button>
+        <span className="font-bold text-slate-600">Page {page}</span>
+        <button
+          onClick={() => setPage((old) => old + 1)}
+          disabled={!apiResponse?.next || isFetching}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-white bg-gradient-to-r from-blue-500 to-purple-500 transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+        >
+          Next <FaChevronRight />
+        </button>
+      </div>
+    </div>
+  );
+}

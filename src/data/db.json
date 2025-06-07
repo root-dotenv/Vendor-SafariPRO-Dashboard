@@ -22,156 +22,34 @@
       "role": "staff"
     }
   ],
-  "inventory": [
+  "services": [
     {
-      "id": "4815",
-      "name": "Luxury Bath Towels",
-      "description": "100% Egyptian cotton, white, 30x56 inches. For guest rooms and spa.",
-      "quantity_in_stock": "350",
-      "quantity_to_reorder": "400",
-      "reorder_request": 5,
-      "cost_per_unit": "22.50",
-      "hotel_id": "htl-gem-101"
+      "id": "f631f672-36e9-4541-ba61-75c20beb6543",
+      "name": "Business Center",
+      "description": "Access to computers, printers, and meeting rooms.",
+      "amendment": "No cancellation required.",
+      "is_active": true
     },
     {
-      "id": "1623",
-      "name": "Guest Shampoo (50ml)",
-      "description": "Organic lavender and mint shampoo, travel size for standard guest bathrooms.",
-      "quantity_in_stock": "1200",
-      "quantity_to_reorder": "1500",
-      "reorder_request": 8,
-      "cost_per_unit": "1.75",
-      "hotel_id": "htl-gem-101"
+      "is_active": false,
+      "amendment": "Amendment policy details goes on here",
+      "description": "Service Name Test Description Goes Here",
+      "name": "TEST SERVICE NAME",
+      "id": "997271d3-25d0-46f0-a1be-cf99df7e360d"
     },
     {
-      "id": "8842",
-      "name": "King Size Bed Sheet Set",
-      "description": "400 thread count sateen weave set. Includes fitted sheet, flat sheet, and two pillowcases.",
-      "quantity_in_stock": "150",
-      "quantity_to_reorder": "160",
-      "reorder_request": 3,
-      "cost_per_unit": "75.00",
-      "hotel_id": "htl-gem-101"
+      "id": "61ad9c92-17a3-4991-8be7-71cf9d20cb72",
+      "name": "Airport Pickup",
+      "description": "Transportation from the airport to the hotel.",
+      "amendment": "24 hours notice required for cancellation.",
+      "is_active": true
     },
     {
-      "id": "1011",
-      "name": "Nespresso Coffee Pods - 'Arpeggio'",
-      "description": "Intense and creamy dark roast coffee pods for in-room Nespresso machines.",
-      "quantity_in_stock": "850",
-      "quantity_to_reorder": "1000",
-      "reorder_request": 10,
-      "cost_per_unit": "0.65",
-      "hotel_id": "htl-gem-101"
-    },
-    {
-      "id": "3141",
-      "name": "Hotel Branded Spring Water",
-      "description": "500ml bottled spring water with hotel logo. For minibar and complimentary service.",
-      "quantity_in_stock": "980",
-      "quantity_to_reorder": "1200",
-      "reorder_request": 7,
-      "cost_per_unit": "0.90",
-      "hotel_id": "htl-gem-101"
-    },
-    {
-      "id": "8842",
-      "name": "King Size Bed Sheet Set",
-      "description": "400 thread count sateen weave set. Includes fitted sheet, flat sheet, and two pillowcases.",
-      "quantity_in_stock": "150",
-      "quantity_to_reorder": "160",
-      "reorder_request": 3,
-      "cost_per_unit": "75.00",
-      "hotel_id": "htl-gem-101"
-    },
-    {
-      "id": "7195",
-      "name": "Bath Towel Set",
-      "description": "100% cotton, 600 GSM premium bath towels. Set includes 2 bath towels, 2 hand towels, and 2 washcloths.",
-      "quantity_in_stock": "200",
-      "quantity_to_reorder": "250",
-      "reorder_request": 5,
-      "cost_per_unit": "45.00",
-      "hotel_id": "htl-gem-101"
-    },
-    {
-      "id": "3628",
-      "name": "Mini Bar Coffee Pods",
-      "description": "Arabica coffee pods for in-room coffee makers. 12-count assorted flavors.",
-      "quantity_in_stock": "85",
-      "quantity_to_reorder": "120",
-      "reorder_request": 7,
-      "cost_per_unit": "12.50",
-      "hotel_id": "htl-gem-102"
-    },
-    {
-      "id": "5471",
-      "name": "Toiletries Kit",
-      "description": "Premium guest toiletries including shampoo, conditioner, body wash, and lotion in 2oz bottles.",
-      "quantity_in_stock": "300",
-      "quantity_to_reorder": "400",
-      "reorder_request": 2,
-      "cost_per_unit": "8.75",
-      "hotel_id": "htl-gem-103"
-    },
-    {
-      "id": "9264",
-      "name": "Plush Robe",
-      "description": "Luxury waffle weave robe with hotel logo embroidery. Available in S-XXL sizes.",
-      "quantity_in_stock": "75",
-      "quantity_to_reorder": "100",
-      "reorder_request": 9,
-      "cost_per_unit": "65.00",
-      "hotel_id": "htl-gem-102"
-    },
-    {
-      "id": "3921",
-      "name": "Deluxe Bath Towel",
-      "description": "Soft, highly absorbent 600 GSM cotton towel suitable for luxury suites.",
-      "quantity_in_stock": "80",
-      "quantity_to_reorder": "100",
-      "reorder_request": 5,
-      "cost_per_unit": "22.50",
-      "hotel_id": "htl-gem-101"
-    },
-    {
-      "id": "7340",
-      "name": "In-Room Coffee Maker",
-      "description": "Compact single-serve coffee makers for guest rooms, includes starter pod pack.",
-      "quantity_in_stock": "30",
-      "quantity_to_reorder": "40",
-      "reorder_request": 2,
-      "cost_per_unit": "55.00",
-      "hotel_id": "htl-gem-102"
-    },
-    {
-      "id": "1287",
-      "name": "Shampoo (500ml)",
-      "description": "Eco-friendly, paraben-free hotel shampoo bottles in 500ml size.",
-      "quantity_in_stock": "200",
-      "quantity_to_reorder": "250",
-      "reorder_request": 4,
-      "cost_per_unit": "4.80",
-      "hotel_id": "htl-gem-101"
-    },
-    {
-      "id": "6503",
-      "name": "Luxury Bathrobe",
-      "description": "White, unisex plush hotel bathrobes with embroidered hotel logo.",
-      "quantity_in_stock": "45",
-      "quantity_to_reorder": "60",
-      "reorder_request": 6,
-      "cost_per_unit": "65.00",
-      "hotel_id": "htl-gem-103"
-    },
-    {
-      "id": "9208",
-      "name": "Room Slippers (Pair)",
-      "description": "Soft terry cloth slippers with anti-slip sole for guest use.",
-      "quantity_in_stock": "300",
-      "quantity_to_reorder": "350",
-      "reorder_request": 7,
-      "cost_per_unit": "6.25",
-      "hotel_id": "htl-gem-101"
+      "id": "ea69",
+      "is_active": false,
+      "amendment": "No Ammendment Policy Needed",
+      "description": "SERCICE DESCRIPTION",
+      "name": "TEST ADD SERVICE"
     }
   ]
 }

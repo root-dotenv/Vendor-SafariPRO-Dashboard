@@ -4,6 +4,13 @@ import React, { useEffect, useState } from "react";
 import { formatDateTime } from "../../utils/format";
 import { useParams } from "react-router-dom";
 import {
+  MdOutlineArticle,
+  MdReportGmailerrorred,
+  MdPendingActions,
+} from "react-icons/md";
+import { RxCross2 } from "react-icons/rx";
+import { BsSafe } from "react-icons/bs";
+import {
   FaCheck,
   FaUser,
   FaEnvelope,
@@ -21,6 +28,7 @@ import {
   FaCoffee,
 } from "react-icons/fa";
 import { FaCalendarCheck, FaCalendarXmark, FaBed } from "react-icons/fa6";
+import { PiBathtubLight } from "react-icons/pi";
 
 // --- TYPES (Interfaces remain the same) ---
 interface GuestDetail {
@@ -151,15 +159,19 @@ const GuestDetail: React.FC = () => {
     getRoomDetails();
   }, [getRoomDetails]);
 
-  // Helper function to get amenity icon
+  // * - - - Helper function to get amenity icon
   const getAmenityIcon = (amenityName: string) => {
     const name = amenityName.toLowerCase();
     if (name.includes("wifi") || name.includes("internet"))
       return <FaWifi className="text-blue-500" />;
     if (name.includes("pool") || name.includes("swimming"))
       return <FaSwimmingPool className="text-cyan-500" />;
+    if (name.includes("Bathtub") || name.includes("bathtub"))
+      return <PiBathtubLight size={20} className="text-cyan-500" />;
     if (name.includes("parking") || name.includes("car"))
       return <FaCar className="text-gray-600" />;
+    if (name.includes("safe") || name.includes("safe"))
+      return <BsSafe size={18} className="text-gray-600" />;
     if (name.includes("restaurant") || name.includes("dining"))
       return <FaUtensils className="text-orange-500" />;
     if (name.includes("service") || name.includes("concierge"))
@@ -188,19 +200,7 @@ const GuestDetail: React.FC = () => {
         <div className="bg-white border-l-4 border-red-500 text-red-700 p-8 rounded-xl shadow  max-w-md w-full">
           <div className="flex items-center mb-4">
             <div className="bg-red-100 rounded-full p-2 mr-3">
-              <svg
-                className="w-6 h-6 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <MdReportGmailerrorred size={18} />
             </div>
             <h3 className="font-bold text-lg">Error Fetching Data</h3>
           </div>
@@ -244,28 +244,12 @@ const GuestDetail: React.FC = () => {
       case "pending":
         statusClasses =
           "bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-amber-200";
-        icon = (
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-              clipRule="evenodd"
-            />
-          </svg>
-        );
+        icon = <MdPendingActions />;
         break;
       case "cancelled":
         statusClasses =
           "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-red-200";
-        icon = (
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fillRule="evenodd"
-              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-        );
+        icon = <RxCross2 size={16} />;
         break;
       default:
         statusClasses =
@@ -317,7 +301,7 @@ const GuestDetail: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-4 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
       <div className="grid grid-cols-12 gap-8">
         {/* --- Enhanced Profile Card --- */}
-        <div className="col-span-12 lg:col-span-3 bg-white rounded-2xl shadow p-6 h-fit transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border border-gray-100">
+        <div className="col-span-12 lg:col-span-3 bg-white rounded-2xl shadow p-6 h-fit transition-all duration-300 hover:shadow border border-gray-100">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
             <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -566,19 +550,7 @@ const GuestDetail: React.FC = () => {
 
             <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
               <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-4 h-4 text-blue-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <MdOutlineArticle size={20} />
                 Description
               </h4>
               <p className="text-sm text-gray-600 leading-relaxed">
